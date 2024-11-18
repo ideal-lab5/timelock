@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
-    "outDir": "./dist",
-    "declaration": true,
-    "resolveJsonModule": true,
-  },
-  "include": ["./src/**/*"],
-  "exclude": ["node_modules"]
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
 }

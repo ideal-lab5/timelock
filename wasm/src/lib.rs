@@ -22,13 +22,15 @@ use serde::{Deserialize, Serialize};
 use serde_big_array::BigArray;
 use sha2::Digest;
 use sp_consensus_beefy_etf::{known_payloads, Commitment, Payload};
-use tle::{
+
+use timelock::{
 	ibe::fullident::Identity,
 	stream_ciphers::{
 		AESGCMStreamCipherProvider, AESOutput, StreamCipherProvider,
 	},
 	tlock::{tld as timelock_decrypt, tle as timelock_encrypt, TLECiphertext},
 };
+
 use w3f_bls::{DoublePublicKey, DoublePublicKeyScheme, EngineBLS, TinyBLS377};
 use wasm_bindgen::prelude::*;
 

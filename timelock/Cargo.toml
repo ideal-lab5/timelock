@@ -1,12 +1,12 @@
 [package]
-name = "tle"
-version = "0.1.0"
+name = "timelock"
+version = "0.0.1"
 edition = "2021"
 description = "timelock encryption imlementation using BF-IBE"
 license = "Apache-2.0"
 repository = "https://github.com/ideal-lab5/tle"
 authors = ["Tony Riemer <driemworks@idealabs.network>"]
-rust-version = "1.63"
+rust-version = "1.80"
 homepage = "https://idealabs.network"
 
 [package.metadata.docs.rs]

@@ -1,19 +1,21 @@
 # Timelock Encryption Typescript Wrapper
 
-This is an SDK for use within js/ts application to interact with the [Ideal Network](https://github.com/ideal-lab5/ideal-network).
+A typescript wrapper around the wasm-pack output of the [timelock](../timelock/) library. It enables usage of timelock encryption in TypeScript environments.
+
+Currently, the library only works on the [Ideal Network](https://github.com/ideal-lab5/ideal-network) randomness beacon, with support for Drand's QuickNet coming soon.
 
 ## Installation
 
 To use the library in your code, the latest published version can be installed from NPM with:
 
 ```bash
-npm i @ideallabs/tle.js
+npm i @ideallabs/timelock.js
 ```
 
 Or, you can build the code with:
 
 ```bash
-git clone git@github.com:ideal-lab5/tle.git
+git clone git@github.com:ideal-lab5/timelock.git
 cd ts
 # ensure typsecript is installed
 npm i -g typsecript
@@ -21,6 +23,36 @@ npm i -g typsecript
 npm i
 # build wasm and transpile typescript 
 npm run build
+```
+
+## Examples
+TODO
+Schedule a timelocked transaction
+
+``` js
+ /**
+   * Prepare a secure delayed transaction for a given deadline.
+   * 
+   * ex:
+   * etf.delay(
+   *  api.tx.balances
+   *    .transferKeepAlive(BOB, 100), 477382)
+   *    .signAndSend(alice, result => {...})
+   * 
+   * @param rawCall: The call to delay
+   * @param priority: The call priority
+   * @param blockNumber: The block for which the call should be executed
+   * @returns (call, sk, block) where the call is a call to schedule the delayed transaction
+   */
+  async delay(rawCall, priority, blockNumber, seed): Promise<any> {
+    try {
+      let call = this.createType('Call', rawCall);
+      let out = await this.timelockEncrypt(call.toU8a(), blockNumber, seed);
+      return this.api.tx.scheduler.scheduleSealed(blockNumber, priority, out);
+    } catch (e) {
+      throw e;
+    }
+  }
 ```
 
 ## Usage

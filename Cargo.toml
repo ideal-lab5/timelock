@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "tle",
+    "timelock",
     "wasm",
 ]
 resolver = "2"

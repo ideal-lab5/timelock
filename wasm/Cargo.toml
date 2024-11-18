@@ -1,5 +1,5 @@
 [package]
-name = "tle-wasm-wrapper"
+name = "timelock-wasm-wrapper"
 version = "0.0.1-dev"
 edition = "2021"
 license = "GPL-3.0-only"
@@ -26,7 +26,7 @@ wasm-opt = false
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.6.1", default-features = false, features = ["derive"] }
 rand_core = "0.6.4"
-tle = { path = "../tle", default-features = false }
+timelock = { path = "../timelock", default-features = false }
 serde = { version = "1.0.208", features = ["derive", "alloc"] }
 serde-big-array = { version = "0.5.1", default-features = false }
 serde-wasm-bindgen = "0.6.5"

@@ -85,9 +85,9 @@ where
 	let header: IBECiphertext<E> = id.encrypt(&secret_key, p_pub, &mut rng);
 	// encrypt arbitrary-length messages with a stream cipher
 	let body = S::encrypt(message, secret_key, &mut rng)
-		.map_err(|_| Error::MessageEncryptionError)?; // not sure how to test this line...
+		.map_err(|_| Error::MessageEncryptionError)?;
 	let mut message_bytes = Vec::new();
-	body.serialize_compressed(&mut message_bytes).unwrap(); // TODO
+	body.serialize_compressed(&mut message_bytes).expect("Encryption output must be serializable.");
 
 	Ok(TLECiphertext {
 		header,
