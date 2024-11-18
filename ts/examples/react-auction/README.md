@@ -1,6 +1,7 @@
 # Etf Futures Example
 
-This is an example of interacting with a futures contract on the ETF network.
+This is an example of interacting with a futures contract on the Ideal Network.
+
 
 The flow is like this:
 
