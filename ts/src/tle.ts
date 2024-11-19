@@ -1,10 +1,15 @@
 /// Timelock Encryption TS Wrapper
 /// This lib provides a typescript wrapper around the wasm-pack output of the timelock encryption library
-import init, { build_encoded_commitment, tle, tld, decrypt as aesDecrypt } from '../../wasm/pkg'
-import hkdf from 'js-crypto-hkdf'; // for npm
+import init, {
+  build_encoded_commitment,
+  tle,
+  tld,
+  decrypt,
+} from 'timelock-wasm-wrapper'
+import hkdf from 'js-crypto-hkdf' // for npm
 
-const HASH = 'SHA-256';
-const HASH_LENGTH = 32;
+const HASH = 'SHA-256'
+const HASH_LENGTH = 32
 
 /**
  * The IdentityBuilder is used to build identities for IBE
@@ -12,13 +17,12 @@ const HASH_LENGTH = 32;
  * should correspond to however that beacon constructs messages for signing.
  */
 interface IdentityBuilder<X> {
-
   /**
    * Build an identity based on the input 'x'
    * @param x : The identity data
    * @returns : The constructed identity
    */
-  build: (x: X) => any;
+  build: (x: X) => any
 }
 
 /**
@@ -26,13 +30,12 @@ interface IdentityBuilder<X> {
  */
 export const IdealNetworkIdentityHandler: IdentityBuilder<number> = {
   build: (bn) => build_encoded_commitment(bn, 0),
-};
-
+}
 
 /**
  * Timelock Encryption: Encrypt the message for the given block
  * The HKDF used satisfies RFC5869
- * 
+ *
  * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
  * @param roundNumber: The round of the protocol
  * @param identityBuilder: Something that imlement IdentityBuilder (e.g. idealNetworkIdentityHandler)
@@ -47,16 +50,16 @@ export async function timelockEncrypt(
   beaconPublicKey: Uint8Array,
   seed: string
 ): Promise<any> {
-  await init();
-  // TODO: fine for now but should ultimately query the BABE pallet config instead
-  // https://github.com/ideal-lab5/tle/issues/7
-  let t = new TextEncoder();
-  let masterSecret = t.encode(seed);
-  return hkdf.compute(masterSecret, HASH, HASH_LENGTH, '').then((derivedKey) => {
-    let id = identityBuilder.build(roundNumber);
-    let ct = tle(id, encodedMessage, derivedKey.key, beaconPublicKey)
-    return ct;
-  });
+  await init()
+  let t = new TextEncoder()
+  let masterSecret = t.encode(seed)
+  return hkdf
+    .compute(masterSecret, HASH, HASH_LENGTH, '')
+    .then((derivedKey) => {
+      let id = identityBuilder.build(roundNumber)
+      let ct = tle(id, encodedMessage, derivedKey.key, beaconPublicKey)
+      return ct
+    })
 }
 
 /**
@@ -67,10 +70,10 @@ export async function timelockEncrypt(
  */
 export async function timelockDecrypt(
   ciphertext: Uint8Array,
-  signature: Uint8Array,
+  signature: Uint8Array
 ): Promise<any> {
-  await init();
-  return tld(ciphertext, signature);
+  await init()
+  return tld(ciphertext, signature)
 }
 
 /**
@@ -79,16 +82,17 @@ export async function timelockDecrypt(
  * @param seed The ciphertext seed
  * @returns The plaintext
  */
-export async function decrypt(
+export async function forceDecrypt(
   ciphertext: Uint8Array,
-  seed: string,
+  seed: string
 ): Promise<any> {
-  await init();
-  let t = new TextEncoder();
-  let masterSecret = t.encode(seed);
-  return hkdf.compute(masterSecret, HASH, HASH_LENGTH, '').then((derivedKey) => {
-    let pt = aesDecrypt(ciphertext, derivedKey);
-    return pt;
-  });
+  await init()
+  let t = new TextEncoder()
+  let masterSecret = t.encode(seed)
+  return hkdf
+    .compute(masterSecret, HASH, HASH_LENGTH, '')
+    .then((derivedKey) => {
+      let pt = decrypt(ciphertext, derivedKey)
+      return pt
+    })
 }
-

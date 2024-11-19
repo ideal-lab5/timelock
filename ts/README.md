@@ -21,24 +21,25 @@ cd ts
 npm i -g typsecript
 # install dependencies
 npm i
-# build wasm and transpile typescript 
+# build wasm and transpile typescript
 npm run build
 ```
 
 ## Examples
+
 TODO
 Schedule a timelocked transaction
 
-``` js
+```js
  /**
    * Prepare a secure delayed transaction for a given deadline.
-   * 
+   *
    * ex:
    * etf.delay(
    *  api.tx.balances
    *    .transferKeepAlive(BOB, 100), 477382)
    *    .signAndSend(alice, result => {...})
-   * 
+   *
    * @param rawCall: The call to delay
    * @param priority: The call priority
    * @param blockNumber: The block for which the call should be executed
@@ -61,7 +62,7 @@ The etf.js library can be run either with a full node or with a light client (in
 
 ### Connecting to a node
 
-``` javascript
+```javascript
 import { Etf } from '@ideallabs/etf.js'
 ```
 
@@ -70,7 +71,7 @@ import { Etf } from '@ideallabs/etf.js'
 To connect to a full node, pass the address of the node's rpc to the init function.
 
 ```javascript
-let ws = 'ws://localhost:9944';
+let ws = 'ws://localhost:9944'
 let etf = new Etf(ws)
 await etf.init()
 ```
@@ -88,13 +89,13 @@ await etf.init(chainSpec)
 
 where you must first fetch the chainspec:
 
-``` bash
+```bash
 wget https://raw.githubusercontent.com/ideal-lab5/etf/main/etfDevSpecRaw.json
 ```
 
 and import into your codebase:
 
-``` javascript
+```javascript
 import chainSpec from './resources/etfTestSpecRaw.json'
 ```
 
@@ -106,16 +107,16 @@ This will start a smoldot light client in the browser, which will automatically 
 
 The API has an optional `types` parameter, which is a proxy to the polkadotjs types registry, allowing you to register custom types if desired.
 
-``` javascript
+```javascript
 // create custom types
 const CustomTypes = {
-    TlockMessage: {
-      ciphertext: 'Vec<u8>',
-      nonce: 'Vec<u8>',
-      capsule: 'Vec<u8>',
-      commitment: 'Vec<u8>',
-    },
-  };
+  TlockMessage: {
+    ciphertext: 'Vec<u8>',
+    nonce: 'Vec<u8>',
+    capsule: 'Vec<u8>',
+    commitment: 'Vec<u8>',
+  },
+}
 await api.init(chainSpec, CustomTypes)
 ```
 
@@ -128,10 +129,10 @@ See the [react-tlock](./examples/react-tlock/) example.
 Messages can be encrypted by passing a number of shares, threshold, and a list of future block numbers. In the default EtfClient, encryption uses AES-GCM alongside ETF. It uses TSS to generate key shares, which are encrypted for blocks.
 
 ```javascript
-let message = "encrypt me!"
+let message = 'encrypt me!'
 let threshold = 2
 let blocks = [151, 152, 159]
-let seed = "random-seed"
+let seed = 'random-seed'
 let out = etf.encrypt(message, threshold, slotSchedule, seed)
 ```
 
@@ -146,23 +147,25 @@ let message = String.fromCharCode(...m)
 
 ### Delayed Transactions
 
-Delayed transactions can be submitted by  using the `etf.delay` API.
+Delayed transactions can be submitted by using the `etf.delay` API.
 
 See the [react-delayed-txs](./examples/react-delayed-txs//) example.
 
-``` javascript
+```javascript
 // the call to delay
-let innerCall = etf.api.tx.balances
-  .transferKeepAlive('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', 100);
+let innerCall = etf.api.tx.balances.transferKeepAlive(
+  '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
+  100
+)
 // calculate a deadline (block)
-let deadline = etf.latestBlockNumber + 2;
+let deadline = etf.latestBlockNumber + 2
 // prepare delayed call  (call, msk)
-let outerCall = etf.delay(innerCall, 127, deadline);
-await outerCall.call.signAndSend(alice, result => {
+let outerCall = etf.delay(innerCall, 127, deadline)
+await outerCall.call.signAndSend(alice, (result) => {
   if (result.status.isInBlock) {
     console.log('in block')
   }
-});
+})
 ```
 
 ### Events
@@ -222,7 +225,6 @@ Fetches the latest known slot.
 #### `public latestBlockNumber: number`
 
 The latest known block number
-
 
 # License
 
