@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 
 use w3f_bls::{EngineBLS, Message};
 
-/// represents a ciphertext in the BF-IBE FullIdent scheme
+/// Represents a ciphertext in the BF-IBE FullIdent scheme
 #[derive(
 	Debug,
 	Clone,
@@ -62,12 +62,12 @@ impl Identity {
 		)
 	}
 
-	/// the IBE extract function on a given secret key
+	/// The IBE extract function on a given secret key
 	pub fn extract<E: EngineBLS>(&self, sk: E::Scalar) -> IBESecret<E> {
 		IBESecret(self.public::<E>() * sk)
 	}
 
-	/// derive the public key for this identity (hash to G1)
+	/// Derive the public key for this identity (hash to G1)
 	pub fn public<E: EngineBLS>(&self) -> E::SignatureGroup {
 		self.0
 			.iter()
@@ -76,6 +76,7 @@ impl Identity {
 	}
 
 	/// BF-IBE encryption
+	/// 
 	/// For a message with 32-bytes and a public key (in G2), calculates the
 	/// BF-IBE ciphertext
 	///

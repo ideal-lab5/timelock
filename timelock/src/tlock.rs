@@ -24,7 +24,7 @@ use ark_std::{
 	vec::Vec,
 };
 
-use w3f_bls::EngineBLS;
+pub use w3f_bls::EngineBLS;
 
 /// A secret key used for encryption/decryption
 pub type OpaqueSecretKey = [u8; 32];
@@ -60,14 +60,14 @@ pub enum Error {
 	InvalidSecretKey,
 }
 
-/// encrypt a message for an identity
+/// Encrypt a message for an identity
 ///
 ///
 /// * `p_pub`: the public key commitment for the IBE system (i.e. the setup
 ///   phase)
 /// * `message`: The message to encrypt
-/// * `id`: the identity to encrypt for
-/// * `rng`: a CSPRNG
+/// * `id`: The identity to encrypt for
+/// * `rng`: A CSPRNG
 ///
 pub fn tle<E, S, R>(
 	p_pub: E::PublicKeyGroup,
@@ -87,7 +87,8 @@ where
 	let body = S::encrypt(message, secret_key, &mut rng)
 		.map_err(|_| Error::MessageEncryptionError)?;
 	let mut message_bytes = Vec::new();
-	body.serialize_compressed(&mut message_bytes).expect("Encryption output must be serializable.");
+	body.serialize_compressed(&mut message_bytes)
+		.expect("Encryption output must be serializable.");
 
 	Ok(TLECiphertext {
 		header,
@@ -96,7 +97,7 @@ where
 	})
 }
 
-/// decrypt a ciphertext created as a result of timelock encryption
+/// Decrypt a ciphertext created as a result of timelock encryption
 /// the signature should be equivalent to the output of IBE.Extract(ID)
 /// where ID is the identity for which the message was created
 ///
@@ -132,7 +133,7 @@ mod test {
 
 	use super::*;
 	use crate::{
-		curves::drand::TinyBLS381, 
+		curves::drand::TinyBLS381,
 		stream_ciphers::{AESGCMStreamCipherProvider, AESOutput},
 	};
 	use alloc::vec;
