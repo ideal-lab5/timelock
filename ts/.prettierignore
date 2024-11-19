@@ -1,7 +1,0 @@
-.vscode/
-out/
-dist/
-node_modules/
-coverage/
-public/
-.env

@@ -35,7 +35,7 @@ pub struct TLECiphertext<E: EngineBLS> {
 	pub header: IBECiphertext<E>,
 	/// The body holds the message encrypted with a stream cipher
 	pub body: Vec<u8>,
-	/// The cipher suite used
+	/// The cipher suite used (symmetric encryption scheme)
 	pub cipher_suite: Vec<u8>,
 }
 
@@ -61,7 +61,6 @@ pub enum Error {
 }
 
 /// Encrypt a message for an identity
-///
 ///
 /// * `p_pub`: the public key commitment for the IBE system (i.e. the setup
 ///   phase)
@@ -125,7 +124,7 @@ where
 	)
 	.map_err(|_| Error::DeserializationError)?;
 
-	return S::decrypt(ct, secret_array).map_err(|_| Error::DecryptionError);
+	S::decrypt(ct, secret_array).map_err(|_| Error::DecryptionError)
 }
 
 #[cfg(test)]
