@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 /// Timelock Encryption TS Wrapper
-/// This lib provides a typescript wrapper around the wasm-pack output of the timelock encryption library
-import init, {
-  build_encoded_commitment,
-  tle,
-  tld,
-  decrypt,
-} from 'timelock-wasm-wrapper'
+/// This lib provides a typescript wrapper around the wasm-pack output of the timelock encryption library\
+// import * as timelock from 'timelock-wasm-wrapper'
+import init, { tle, tld, decrypt, build_encoded_commitment } from 'timelock-wasm-wrapper'
 import hkdf from 'js-crypto-hkdf' // for npm
 
+/// The hash used by the HKDF
 const HASH = 'SHA-256'
+/// The length of the hash
 const HASH_LENGTH = 32
 
 /**
@@ -47,6 +45,15 @@ export const IdealNetworkIdentityHandler: IdentityBuilder<number> = {
   build: (bn) => build_encoded_commitment(bn, 0),
 }
 
+// /**
+//  * Initialize the wasm blob
+//  * @returns the initialized wasm
+//  */
+// export async function init() {
+//   await timelock.init()
+//   return timelock
+// }
+
 /**
  * Timelock Encryption: Encrypt the message for the given block
  * The HKDF used satisfies RFC5869
@@ -56,7 +63,7 @@ export const IdealNetworkIdentityHandler: IdentityBuilder<number> = {
  * @param identityBuilder: Something that imlement IdentityBuilder (e.g. idealNetworkIdentityHandler)
  * @param beaconPublicKey: The public key of the randomness beacon used
  * @param seed: A seed to derive crypto keys
- * @returns the ciphertext
+ * @returns The ciphertext
  */
 export async function timelockEncrypt(
   encodedMessage: Uint8Array,
@@ -65,7 +72,7 @@ export async function timelockEncrypt(
   beaconPublicKey: Uint8Array,
   seed: string
 ): Promise<any> {
-  await init()
+  // await init()
   let t = new TextEncoder()
   let masterSecret = t.encode(seed)
   return hkdf
@@ -87,7 +94,6 @@ export async function timelockDecrypt(
   ciphertext: Uint8Array,
   signature: Uint8Array
 ): Promise<any> {
-  await init()
   return tld(ciphertext, signature)
 }
 
@@ -101,7 +107,6 @@ export async function forceDecrypt(
   ciphertext: Uint8Array,
   seed: string
 ): Promise<any> {
-  await init()
   let t = new TextEncoder()
   let masterSecret = t.encode(seed)
   return hkdf
