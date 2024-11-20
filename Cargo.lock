@@ -2917,7 +2917,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-beefy-etf"
 version = "13.0.0"
-source = "git+https://github.com/ideal-lab5/pallets.git#a8c71dfb9bcd198cfac1071eb37328676ac4f959"
+source = "git+https://github.com/ideal-lab5/idn-sdk.git#a8c71dfb9bcd198cfac1071eb37328676ac4f959"
 dependencies = [
  "lazy_static",
  "parity-scale-codec",

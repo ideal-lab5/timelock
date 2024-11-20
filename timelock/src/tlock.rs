@@ -117,12 +117,10 @@ where
 		.map_err(|_| Error::InvalidSignature)?;
 	// ensure we recovered a valid sized secret
 	let secret_array: [u8; 32] =
-		secret_bytes.clone().try_into().map_err(|_| Error::InvalidSecretKey)?;
+		secret_bytes.try_into().map_err(|_| Error::InvalidSecretKey)?;
 
-	let ct = S::Ciphertext::deserialize_compressed(
-		&mut &ciphertext.body.clone()[..],
-	)
-	.map_err(|_| Error::DeserializationError)?;
+	let ct = S::Ciphertext::deserialize_compressed(&mut &ciphertext.body[..])
+		.map_err(|_| Error::DeserializationError)?;
 
 	S::decrypt(ct, secret_array).map_err(|_| Error::DecryptionError)
 }
@@ -149,8 +147,7 @@ mod test {
 		DecryptionFailed { error: Error },
 	}
 
-	// tlock test aes_gcm 256
-	fn tlock_test<E: EngineBLS, R: Rng + Sized + CryptoRng>(
+	fn tlock_test_aes_gcm<E: EngineBLS, R: Rng + Sized + CryptoRng>(
 		inject_bad_ct: bool,
 		inject_bad_nonce: bool,
 		handler: &dyn Fn(TestStatusReport) -> (),
@@ -212,7 +209,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_single_sig() {
-		tlock_test::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
 			false,
 			false,
 			&|status: TestStatusReport| match status {
@@ -226,7 +223,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_full_sigs_present() {
-		tlock_test::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
 			false,
 			false,
 			&|status: TestStatusReport| match status {
@@ -240,7 +237,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_many_identities_at_threshold() {
-		tlock_test::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
 			false,
 			false,
 			&|status: TestStatusReport| match status {
@@ -254,7 +251,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_decryption_fails_with_bad_ciphertext() {
-		tlock_test::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
 			true,
 			false,
 			&|status: TestStatusReport| match status {
@@ -268,7 +265,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_decryption_fails_with_bad_nonce() {
-		tlock_test::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
 			false,
 			true,
 			&|status: TestStatusReport| match status {

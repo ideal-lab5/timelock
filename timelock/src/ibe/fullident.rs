@@ -57,7 +57,7 @@ impl Identity {
 		Self(
 			identities
 				.iter()
-				.map(|identity| Message::new(ctx, &identity))
+				.map(|identity| Message::new(ctx, identity))
 				.collect::<Vec<_>>(),
 		)
 	}
@@ -76,7 +76,7 @@ impl Identity {
 	}
 
 	/// BF-IBE encryption
-	/// 
+	///
 	/// For a message with 32-bytes and a public key (in G2), calculates the
 	/// BF-IBE ciphertext
 	///
@@ -167,6 +167,14 @@ mod test {
 		DecryptionFailure { error: IbeError },
 	}
 
+	/// Runs a test for the encryption and decryption process using the specified BLS engine.
+	///
+	/// This function performs the following steps:
+	/// 1. Extracts the master secret key (msk) and secret key (sk) for the given identity.
+	/// 2. Computes the public key `p_pub` using the master secret key.
+	/// 3. Creates a `Ciphertext` structure, optionally inserting a bad ciphertext if specified.
+	/// 4. Attempts to decrypt the ciphertext using the secret key.
+	/// 5. Calls the provided handler with the result of the decryption attempt.
 	fn run_test<EB: EngineBLS>(
 		identity: Identity,
 		message: [u8; 32],

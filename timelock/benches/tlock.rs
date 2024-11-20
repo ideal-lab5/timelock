@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 by Ideal Labs, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 use ark_ec::Group;
 use ark_ff::UniformRand;
 use criterion::{
@@ -5,12 +21,12 @@ use criterion::{
 	Throughput,
 };
 use rand_core::OsRng;
-use tle::{ibe::fullident::*, stream_ciphers::AESGCMStreamCipherProvider, tlock::*};
+use timelock::{ibe::fullident::*, stream_ciphers::AESGCMStreamCipherProvider, tlock::*};
 use w3f_bls::{EngineBLS, SecretKey, TinyBLS377};
 
-/// encrypts a message for the identity and then decrypts it after preparing a
-/// bls sig this expects on a single signature but tests many different input
-/// data sizes
+/// Encrypts a message for the identity and then decrypts it after preparing a
+/// bls sig. It expects on a single signature but tests many different input
+/// data sizes.
 fn tlock_tinybls377<E: EngineBLS>(
 	msk: [u8;32],
 	p_pub: E::PublicKeyGroup,
@@ -18,11 +34,11 @@ fn tlock_tinybls377<E: EngineBLS>(
 	id: Identity,
 	sig: IBESecret<E>,
 ) {
-	let ct = tle::<TinyBLS377, AESGCMStreamCipherProvider, OsRng>(
+	let ct = tle::<E, AESGCMStreamCipherProvider, OsRng>(
 		p_pub, msk, &message, id, OsRng,
 	)
-	.uwnrap();
-	let _m = tld::<TinyBLS377, AESGCMStreamCipherProvider>(ct, sig).unwrap();
+	.unwrap();
+	let _m = tld::<E, AESGCMStreamCipherProvider>(ct, sig.0).unwrap();
 }
 
 fn tlock(c: &mut Criterion) {
