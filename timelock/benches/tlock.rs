@@ -21,14 +21,16 @@ use criterion::{
 	Throughput,
 };
 use rand_core::OsRng;
-use timelock::{ibe::fullident::*, stream_ciphers::AESGCMStreamCipherProvider, tlock::*};
+use timelock::{
+	ibe::fullident::*, stream_ciphers::AESGCMStreamCipherProvider, tlock::*,
+};
 use w3f_bls::{EngineBLS, SecretKey, TinyBLS377};
 
 /// Encrypts a message for the identity and then decrypts it after preparing a
 /// bls sig. It expects on a single signature but tests many different input
 /// data sizes.
 fn tlock_tinybls377<E: EngineBLS>(
-	msk: [u8;32],
+	msk: [u8; 32],
 	p_pub: E::PublicKeyGroup,
 	message: Vec<u8>,
 	id: Identity,
@@ -41,6 +43,11 @@ fn tlock_tinybls377<E: EngineBLS>(
 	let _m = tld::<E, AESGCMStreamCipherProvider>(ct, sig.0).unwrap();
 }
 
+/// Benchmarks the `tlock_tinybls377` function using the Criterion benchmarking library.
+///
+/// This function sets up a series of benchmarks to measure the performance of the
+/// `tlock_tinybls377` function with varying input sizes. The benchmarks are grouped
+/// under the name "tlock".
 fn tlock(c: &mut Criterion) {
 	static KB: usize = 1024;
 
@@ -50,7 +57,8 @@ fn tlock(c: &mut Criterion) {
 	let msk = <TinyBLS377 as EngineBLS>::Scalar::rand(&mut OsRng);
 
 	let mut group = c.benchmark_group("tlock");
-	for size in [KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB, 128 * KB, 256 * KB].iter() {
+	for size in [KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB, 128 * KB, 256 * KB].iter()
+	{
 		let mut dummy_data = Vec::with_capacity(*size);
 		(0..*size).for_each(|i| dummy_data.push(i as u8));
 
@@ -61,7 +69,7 @@ fn tlock(c: &mut Criterion) {
 			|b, &size| {
 				b.iter(|| {
 					tlock_tinybls377::<TinyBLS377>(
-						black_box([2;32]),
+						black_box([2; 32]),
 						black_box(p_pub),
 						black_box(dummy_data.clone()),
 						black_box(id.clone()),

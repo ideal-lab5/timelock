@@ -50,7 +50,11 @@ impl CurveExtraConfig for ark_bls12_381::Config {
 
 /// A BLS variant with tiny 48 byte signatures and 96 byte public keys,
 ///
-/// Specifically, this configuration is used by Drand's QuickNet.
+/// Specifically, this configuration is used by Drand's QuickNet. 
+/// It is a slightly modified version of the w3f/bls library's
+/// [TinyBLS381](https://github.com/w3f/bls/blob/85c4f76a64671c4cfa3ac713983a263f96709f0c/src/engine.rs#L348) implementation.
+/// However, the TinyBLS381 implementation is inflexible and uses a hardcoded value for domain 
+/// separation when computing the hash to curve map.
 ///
 /// Note on performance: verifiers  always perform `O(signers)` additions on the
 /// `PublicKeyGroup`, or worse 128 bit scalar multiplications with
@@ -134,6 +138,9 @@ where
 		)
 	}
 
+	/// Get the hash to curve function for this curve
+	/// That is, it returns a function we can use to hash messages to the G1 group
+	/// TODO: handle the unwrap: https://github.com/ideal-lab5/timelock/issues/12
 	fn hash_to_curve_map() -> MapToCurveBasedHasher<
 		Self::SignatureGroup,
 		Self::HashToSignatureField,

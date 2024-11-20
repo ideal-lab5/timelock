@@ -119,6 +119,7 @@ where
 	let secret_array: [u8; 32] =
 		secret_bytes.try_into().map_err(|_| Error::InvalidSecretKey)?;
 
+	// TODO: Enhanced SerializationError handling https://github.com/ideal-lab5/timelock/issues/11
 	let ct = S::Ciphertext::deserialize_compressed(&mut &ciphertext.body[..])
 		.map_err(|_| Error::DeserializationError)?;
 

@@ -221,7 +221,7 @@ pub fn generate_keys(seed: JsValue) -> Result<JsValue, JsError> {
     let seed_vec = seed_vec.as_slice();
 
 	let mut hasher = sha2::Sha256::default();
-	hasher.update(&seed_vec);
+	hasher.update(seed_vec);
 	let hash = hasher.finalize();
     let seed_hash: [u8; 32] = hash.into();
     let mut rng: ChaCha20Rng = ChaCha20Rng::from_seed(seed_hash);

@@ -1,8 +1,8 @@
 [package]
 name = "timelock-wasm-wrapper"
-version = "0.0.1-dev"
+version = "0.0.1"
 edition = "2021"
-license = "GPL-3.0-only"
+license = "Apache-2.0"
 description = "Wasm bidings for the timelock encryption crate"
 repository = "https://github.com/ideal-lab5/timelock"
 authors = ["Ideal Lab5 <hello@idealabs.network>"]

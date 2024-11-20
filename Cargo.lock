@@ -3600,7 +3600,7 @@ dependencies = [
 
 [[package]]
 name = "timelock-wasm-wrapper"
-version = "0.0.1-dev"
+version = "0.0.1"
 dependencies = [
  "ark-bls12-381",
  "ark-ec",
