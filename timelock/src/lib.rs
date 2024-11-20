@@ -14,26 +14,19 @@
  * limitations under the License.
  */
 
- #![no_std]
-
+#![no_std]
 #![warn(
-    unused,
-    future_incompatible,
-    nonstandard_style,
-    rust_2018_idioms,
-    rust_2021_compatibility
-)]
-#![allow(
-    clippy::op_ref, 
-    clippy::suspicious_op_assign_impl,
-    clippy::type_complexity,
-    clippy::should_implement_trait
+	unused,
+	future_incompatible,
+	nonstandard_style,
+	rust_2018_idioms,
+	rust_2021_compatibility
 )]
 #![deny(unsafe_code)]
 
 extern crate alloc;
 
-pub mod aes;
 pub mod curves;
 pub mod ibe;
+pub mod stream_ciphers;
 pub mod tlock;
