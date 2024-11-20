@@ -9,14 +9,12 @@
   "type": "module",
   "dependencies": {
     "js-crypto-hkdf": "^1.0.7",
-    "node-fetch": "^3.3.2",
-    "timelock-wasm-wrapper": "file:../wasm/pkg/",
-    "vite": "^5.4.11"
+    "timelock-wasm-wrapper": "file:../wasm/pkg/"
   },
   "scripts": {
     "build:wasm": "cd ../wasm && ./wasm_build.sh",
     "build": "npm run build:wasm && npm i && tsc",
-    "test": "vitest",
+    "test": "jest",
     "lint": "prettier --write ."
   },
   "devDependencies": {
@@ -27,7 +25,6 @@
     "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
     "ts-jest-resolver": "^2.0.1",
-    "typescript": "^5.2.2",
-    "vitest": "^2.1.5"
+    "typescript": "^5.2.2"
   }
 }
