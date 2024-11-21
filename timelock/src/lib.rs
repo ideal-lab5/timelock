@@ -22,12 +22,6 @@
 	rust_2018_idioms,
 	rust_2021_compatibility
 )]
-#![allow(
-	clippy::op_ref,
-	clippy::suspicious_op_assign_impl,
-	clippy::type_complexity,
-	clippy::should_implement_trait
-)]
 #![deny(unsafe_code)]
 
 extern crate alloc;

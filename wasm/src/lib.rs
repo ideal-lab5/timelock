@@ -189,8 +189,7 @@ pub struct KeyChain {
 	pub sk: [u8; 32],
 }
 
-/// build an encoded commitment for use in timelock encryption and sig
-/// verification
+/// Builds an encoded commitment for use in timelock encryption using the Ideal Network
 #[wasm_bindgen]
 pub fn build_encoded_commitment(
 	block_number_js: JsValue,
@@ -222,9 +221,9 @@ pub fn generate_keys(seed: JsValue) -> Result<JsValue, JsError> {
     let seed_vec = seed_vec.as_slice();
 
 	let mut hasher = sha2::Sha256::default();
-	hasher.update(&seed_vec);
+	hasher.update(seed_vec);
 	let hash = hasher.finalize();
-    let seed_hash: [u8; 32] = hash.try_into().unwrap();
+    let seed_hash: [u8; 32] = hash.into();
     let mut rng: ChaCha20Rng = ChaCha20Rng::from_seed(seed_hash);
     let keypair = w3f_bls::KeypairVT::<TinyBLS377>::generate(&mut rng);
     let sk_gen: <TinyBLS377 as EngineBLS>::Scalar = keypair.secret.0;
@@ -338,8 +337,6 @@ mod test {
 				},
 				Err(error) =>
 					handler(TestStatusReport::EncryptFailure { _error: error }),
-				Err(_error) =>
-					handler(TestStatusReport::EncryptFailure { _error }),
 			}
 		} else {
 			match tle(identity_js, message_js, sk_js, p_pub_js) {

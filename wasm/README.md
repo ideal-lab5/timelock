@@ -1,6 +1,6 @@
 # WASM compat
 
-This crate provides wasm compatibility for the tle crate.
+This crate provides wasm compatibility for the timelock crate.
 
 ## Build
 

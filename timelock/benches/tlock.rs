@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 by Ideal Labs, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 use ark_ec::Group;
 use ark_ff::UniformRand;
 use criterion::{
@@ -5,26 +21,33 @@ use criterion::{
 	Throughput,
 };
 use rand_core::OsRng;
-use tle::{ibe::fullident::*, stream_ciphers::AESGCMStreamCipherProvider, tlock::*};
+use timelock::{
+	ibe::fullident::*, stream_ciphers::AESGCMStreamCipherProvider, tlock::*,
+};
 use w3f_bls::{EngineBLS, SecretKey, TinyBLS377};
 
-/// encrypts a message for the identity and then decrypts it after preparing a
-/// bls sig this expects on a single signature but tests many different input
-/// data sizes
+/// Encrypts a message for the identity and then decrypts it after preparing a
+/// bls sig. It expects on a single signature but tests many different input
+/// data sizes.
 fn tlock_tinybls377<E: EngineBLS>(
-	msk: [u8;32],
+	msk: [u8; 32],
 	p_pub: E::PublicKeyGroup,
 	message: Vec<u8>,
 	id: Identity,
 	sig: IBESecret<E>,
 ) {
-	let ct = tle::<TinyBLS377, AESGCMStreamCipherProvider, OsRng>(
+	let ct = tle::<E, AESGCMStreamCipherProvider, OsRng>(
 		p_pub, msk, &message, id, OsRng,
 	)
-	.uwnrap();
-	let _m = tld::<TinyBLS377, AESGCMStreamCipherProvider>(ct, sig).unwrap();
+	.unwrap();
+	let _m = tld::<E, AESGCMStreamCipherProvider>(ct, sig.0).unwrap();
 }
 
+/// Benchmarks the `tlock_tinybls377` function using the Criterion benchmarking library.
+///
+/// This function sets up a series of benchmarks to measure the performance of the
+/// `tlock_tinybls377` function with varying input sizes. The benchmarks are grouped
+/// under the name "tlock".
 fn tlock(c: &mut Criterion) {
 	static KB: usize = 1024;
 
@@ -34,7 +57,8 @@ fn tlock(c: &mut Criterion) {
 	let msk = <TinyBLS377 as EngineBLS>::Scalar::rand(&mut OsRng);
 
 	let mut group = c.benchmark_group("tlock");
-	for size in [KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB, 128 * KB, 256 * KB].iter() {
+	for size in [KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB, 128 * KB, 256 * KB].iter()
+	{
 		let mut dummy_data = Vec::with_capacity(*size);
 		(0..*size).for_each(|i| dummy_data.push(i as u8));
 
@@ -45,7 +69,7 @@ fn tlock(c: &mut Criterion) {
 			|b, &size| {
 				b.iter(|| {
 					tlock_tinybls377::<TinyBLS377>(
-						black_box([2;32]),
+						black_box([2; 32]),
 						black_box(p_pub),
 						black_box(dummy_data.clone()),
 						black_box(id.clone()),

@@ -15,4 +15,4 @@
  */
 
 pub mod fullident;
-pub mod utils;
+pub(crate) mod utils;

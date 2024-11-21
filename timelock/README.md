@@ -31,10 +31,10 @@ let ct = tle::<TinyBLS377, AESGCMStreamCipherProvider, OsRng>::(p_pub, msk, &mes
 ### Decrypt a Message
 
 #### Early decryption
-Message can be encrypted at any time using the ephemeral secret key used to encrypt it:
+Message can be encrypted at any time using the ephemeral secret key used to encrypt it, along with the same encryption scheme:
 ``` rust
 // use the same esk as in `encrypt`
-let early_result = ct.aes_decrypt(esk).unwrap();
+let early_result = AESGCMStreamCipherProvider::decrypt(ct, esk).unwrap();
 ```
 
 #### Timelock Decryption
@@ -42,7 +42,7 @@ Messages can also be decrypted with a signature produced by a beacon on top of t
 ``` rust
 // first get a valid siganture from the beacon
 let signature =	hex::decode(b"f8178b1c3c9477f7b0e37cd3e63ff3a184e1d05df3117438cd05e109b5731a52a96ae344e461bc6cb8e04f5efed34701").expect("decoding failure");
-let result: DecryptionResult = ct.tld(sig).unwrap();
+let result: DecryptionResult = tld::<TinyBLS381, AESGCMStreamCipherProvider>(ct, sig).unwrap();
 ```
 
 ## Build
@@ -50,7 +50,6 @@ let result: DecryptionResult = ct.tld(sig).unwrap();
 From the root, run `cargo build`
 
 ## Test
-
 
 ### Unit tests
 From the root, run `cargo test`
@@ -67,3 +66,7 @@ cargo tarpaulin --rustflags="-C opt-level=0"
 ``` shell
 cargo benchmark
 ```
+
+## License
+
+Apache-2.0
