@@ -47,130 +47,90 @@ export const IdealNetworkIdentityHandler: IdentityBuilder<number> = {
   build: (bn) => build_encoded_commitment(bn, 0),
 }
 
+/**
+ * The Timelock class handles initialization of the WASM modules required to use the Timelock library
+ * from web based contexts. It is a thin wrapper around the output of running `wasm-pack --target web` from the wasm directory
+ * It gracefully ensures that the WASM is available before attempting to call the respective functions.
+ */
 export class Timelock {
   /**
-   * A private constructor to enforce usage of waitReady
+   * Indicates if the wasm has been initialized or not
    */
-  private constructor() { }
+  private wasmReady: false
 
-  public static async waitReady() {
+  /**
+   * A private constructor to enforce usage of `build`
+   */
+  private constructor() {}
+
+  /**
+   * Loads the wasm and constructs a new Timelock instance
+   * @returns
+   */
+  public static async build() {
     await init()
     return new Timelock()
   }
 
   /**
- * Timelock Encryption: Encrypt the message for the given block
- * The HKDF used satisfies RFC5869
- *
- * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
- * @param roundNumber: The round of the protocol
- * @param identityBuilder: Something that imlement IdentityBuilder (e.g. idealNetworkIdentityHandler)
- * @param beaconPublicKey: The public key of the randomness beacon used
- * @param seed: A seed to derive crypto keys
- * @returns the ciphertext
- */
+   * Timelock Encryption: Encrypt the message for the given block
+   * The HKDF used satisfies RFC5869
+   *
+   * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
+   * @param roundNumber: The round of the protocol
+   * @param identityBuilder: Something that imlement IdentityBuilder (e.g. IdealNetworkIdentityHandler)
+   * @param beaconPublicKey: The public key of the randomness beacon
+   * @param ephemeralSecretKey: An ephemeral secret key passed to AES-GCM
+   * @returns The Timelocked ciphertext
+   */
   public async encrypt(
     encodedMessage: Uint8Array,
     roundNumber: number,
     identityBuilder: IdentityBuilder<number>,
     beaconPublicKey: Uint8Array,
-    seed: string
+    ephemeralSecretKey: Uint8Array
   ): Promise<any> {
-    await init()
-    let t = new TextEncoder()
-    let masterSecret = t.encode(seed)
-    return hkdf
-      .compute(masterSecret, HASH, HASH_LENGTH, '')
-      .then((derivedKey) => {
-        let id = identityBuilder.build(roundNumber)
-        return tle(id, encodedMessage, derivedKey.key, beaconPublicKey)
-      })
+    await this.checkWasm()
+    let id = identityBuilder.build(roundNumber)
+    return tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey)
   }
-
 
   /**
    * Timelock decryption: Decrypt the ciphertext using a pulse from the beacon produced at the given block
    * @param ciphertext: Ciphertext to be decrypted
    * @param blockNumber: Block number that has the signature for decryption
-   * @returns: Plaintext of encrypted message
+   * @returns: The decrypted message (if successful), else nothing (is that what I want?)
    */
   public async decrypt(
     ciphertext: Uint8Array,
     signature: Uint8Array
   ): Promise<any> {
+    await this.checkWasm()
     return tld(ciphertext, signature)
   }
-
 
   /**
    * Decrypt a ciphertext early using the cipher used when encrypting if you know the seed
    * @param ciphertext The ciphertext to decrypt
-   * @param seed The ciphertext seed
+   * @param ephemeralSecretKey: An ephemeral secret key passed to AES-GCM
    * @returns The plaintext
    */
   public async forceDecrypt(
     ciphertext: Uint8Array,
-    seed: string
+    ephemeralSecretKey: Uint8Array
   ): Promise<any> {
-    await init()
-    let t = new TextEncoder()
-    let masterSecret = t.encode(seed)
-    return hkdf
-      .compute(masterSecret, HASH, HASH_LENGTH, '')
-      .then((derivedKey) => {
-        return decrypt(ciphertext, derivedKey)
-      })
+    await this.checkWasm()
+    return decrypt(ciphertext, ephemeralSecretKey)
+  }
+
+  /**
+   * Check if the wasm has been initialized.
+   * If it hasn't, gracefully load the wasm and continue.
+   * Q: In which scenarios would the wasm be unavailable after initially being loaded?
+   */
+  async checkWasm() {
+    if (!this.wasmReady) {
+      await init()
+    }
   }
 }
-
-// /**
-//  * Timelock Encryption: Encrypt the message for the given block
-//  * The HKDF used satisfies RFC5869
-//  *
-//  * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
-//  * @param roundNumber: The round of the protocol
-//  * @param identityBuilder: Something that imlement IdentityBuilder (e.g. idealNetworkIdentityHandler)
-//  * @param beaconPublicKey: The public key of the randomness beacon used
-//  * @param seed: A seed to derive crypto keys
-//  * @returns the ciphertext
-//  */
-// export async function timelockEncrypt(
-//   encodedMessage: Uint8Array,
-//   roundNumber: number,
-//   identityBuilder: IdentityBuilder<number>,
-//   beaconPublicKey: Uint8Array,
-//   seed: string
-// ): Promise<any> {
-//   await init()
-//   let t = new TextEncoder()
-//   let masterSecret = t.encode(seed)
-//   return hkdf
-//     .compute(masterSecret, HASH, HASH_LENGTH, '')
-//     .then((derivedKey) => {
-//       let id = identityBuilder.build(roundNumber)
-//       let ct = tle(id, encodedMessage, derivedKey.key, beaconPublicKey)
-//       return ct
-//     })
-// }
-
-
-// /**
-//  * Decrypt a ciphertext early if you know the seed
-//  * @param ciphertext The ciphertext to decrypt
-//  * @param seed The ciphertext seed
-//  * @returns The plaintext
-//  */
-// export async function forceDecrypt(
-//   ciphertext: Uint8Array,
-//   seed: string
-// ): Promise<any> {
-//   await init()
-//   let t = new TextEncoder()
-//   let masterSecret = t.encode(seed)
-//   return hkdf
-//     .compute(masterSecret, HASH, HASH_LENGTH, '')
-//     .then((derivedKey) => {
-//       let pt = decrypt(ciphertext, derivedKey)
-//       return pt
-//     })
-// }

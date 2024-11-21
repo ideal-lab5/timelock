@@ -4,7 +4,14 @@ This is a basic example to demonstrate usage of the `@ideallabs/timelock.js` lib
 
 ## Build
 
-This application is built with `react-app rewired` to handle polyfills for crypto modules. 
+This application is built with `react-app rewired` to handle polyfills for crypto modules.
 
-``` shell
+```shell
+npm run build
+```
+
+## Run
+
+```shell
+npm run start
 ```

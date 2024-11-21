@@ -1,56 +1,63 @@
-// /*
-//  * Copyright 2024 by Ideal Labs, LLC
-//  *
-//  * Licensed under the Apache License, Version 2.0 (the "License");
-//  * you may not use this file except in compliance with the License.
-//  * You may obtain a copy of the License at
-//  *
-//  *     http://www.apache.org/licenses/LICENSE-2.0
-//  *
-//  * Unless required by applicable law or agreed to in writing, software
-//  * distributed under the License is distributed on an "AS IS" BASIS,
-//  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  * See the License for the specific language governing permissions and
-//  * limitations under the License.
-//  */
-// import { expect, test, vi } from 'vitest'
-// import {
-//   timelockEncrypt,
-//   timelockDecrypt,
-//   forceDecrypt,
-//   IdealNetworkIdentityHandler,
-// } from './timelock'
+import { expect, describe } from '@jest/globals'
+import { IdealNetworkIdentityHandler, Timelock } from './timelock'
+import init, { build_encoded_commitment, tle, tld, decrypt } from 'timelock-wasm-wrapper';
 
-// test('it should timelock encrypt a message for an IDN style network when params are valid', async () => {
-//   const seed = 'seed'
-//   const roundNumber = 123
-//   const message = 'Hello, world!'
-//   let idnBeaconPK =
-//     '471ba929a4e2ef2790fb5f2a65ebe86598a28cbb8a58e49c6cc7292cf40cecbdf10152394ba938367ded5355ae373e01a99567467bc816864774e84b984fc16e2ae2232be6481cd4db0e378e1d6b0c2265d2aa8e0fa4e2c76958ce9f12df8e0134c431c181308a68b94b9cfba5176c3a8dd22ead9a68a077ecce7facfe4adb9e0e0a71c94a0c436d8049b03fa5352301'
-//   const publicKey = Uint8Array.from(Buffer.from(idnBeaconPK, 'hex'))
-  
-//   await timelockEncrypt(
-//     new TextEncoder().encode(message),
-//     roundNumber,
-//     IdealNetworkIdentityHandler,
-//     publicKey,
-//     seed
-//   ).then((result) => {
-//     expect(result).toEqual('tle-ciphertext')
-//   })
-// })
+jest.mock('timelock-wasm-wrapper');
 
-// test('it should timelock decrypt a message', async () => {
-//   const ciphertext = new Uint8Array(1);
-//   const signature = new Uint8Array(2);
-//   const result = await timelockDecrypt(ciphertext, signature);
-//   expect(result).toEqual('tld-plaintext')
-// })
+describe('Timelock Class', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
-// test('it should decrypt a message on demand if the user knows the secret', async () => {
-//   const plaintext = 'plaintext'
-//   const secret = "shhh, it's a secret"
-//   const ciphertext = new Uint8Array(1)
-//   const result = await forceDecrypt(ciphertext, secret)
-//   expect(result).toEqual(plaintext)
-// })
+    test('should initialize WASM and create an instance', async () => {
+        const instance = await Timelock.build();
+        expect(init).toHaveBeenCalledTimes(1);
+        expect(instance).toBeInstanceOf(Timelock);
+    });
+
+    test('should encrypt data using tle', async () => {
+        const instance = await Timelock.build();
+        const encodedMessage = new Uint8Array([1, 2, 3]);
+        const beaconPublicKey = new Uint8Array([4, 5, 6]);
+        const ephemeralSecretKey = new Uint8Array([7, 8, 9]);
+
+        const result = await instance.encrypt(
+            encodedMessage,
+            42,
+            IdealNetworkIdentityHandler,
+            beaconPublicKey,
+            ephemeralSecretKey
+        );
+
+        expect(build_encoded_commitment).toHaveBeenCalledWith(42, 0);
+        expect(tle).toHaveBeenCalledWith(
+            "mocked_commitment",
+            encodedMessage,
+            ephemeralSecretKey,
+            beaconPublicKey
+        );
+        expect(result).toBe("mocked_encrypted_data");
+    });
+
+    test('should decrypt data using tld', async () => {
+        const instance = await Timelock.build();
+        const ciphertext = new Uint8Array([10, 11, 12]);
+        const signature = new Uint8Array([13, 14, 15]);
+
+        const result = await instance.decrypt(ciphertext, signature);
+
+        expect(tld).toHaveBeenCalledWith(ciphertext, signature);
+        expect(result).toBe("mocked_decrypted_data");
+    });
+
+    test('should force decrypt data using decrypt', async () => {
+        const instance = await Timelock.build();
+        const ciphertext = new Uint8Array([16, 17, 18]);
+        const ephemeralSecretKey = new Uint8Array([19, 20, 21]);
+
+        const result = await instance.forceDecrypt(ciphertext, ephemeralSecretKey);
+
+        expect(decrypt).toHaveBeenCalledWith(ciphertext, ephemeralSecretKey);
+        expect(result).toBe("mocked_force_decrypted_data");
+    });
+});
