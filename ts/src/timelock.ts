@@ -49,8 +49,7 @@ export const IdealNetworkIdentityHandler: IdentityBuilder<number> = {
 
 /**
  * The Timelock class handles initialization of the WASM modules required to use the Timelock library
- * from web based contexts. It is a thin wrapper around the output of running `wasm-pack --target web` from the wasm directory
- * It gracefully ensures that the WASM is available before attempting to call the respective functions.
+ * from web based contexts. It gracefully ensures that the WASM is available before attempting to call the respective functions.
  */
 export class Timelock {
   /**
@@ -61,7 +60,7 @@ export class Timelock {
   /**
    * A private constructor to enforce usage of `build`
    */
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Loads the wasm and constructs a new Timelock instance
@@ -74,7 +73,6 @@ export class Timelock {
 
   /**
    * Timelock Encryption: Encrypt the message for the given block
-   * The HKDF used satisfies RFC5869
    *
    * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
    * @param roundNumber: The round of the protocol
@@ -125,8 +123,7 @@ export class Timelock {
 
   /**
    * Check if the wasm has been initialized.
-   * If it hasn't, gracefully load the wasm and continue.
-   * Q: In which scenarios would the wasm be unavailable after initially being loaded?
+   * If it hasn't, gracefully load it and continue.
    */
   async checkWasm() {
     if (!this.wasmReady) {
