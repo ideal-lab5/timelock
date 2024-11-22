@@ -13,38 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/// Timelock Encryption TS Wrapper
-/// This lib provides a typescript wrapper around the wasm-pack output of the timelock encryption library
+
+/** Timelock Encryption TS Wrapper
+ * This lib provides a typescript wrapper around the wasm-pack output of the timelock encryption library
+*/
+
 import init, {
-  build_encoded_commitment,
   tle,
   tld,
   decrypt,
 } from 'timelock-wasm-wrapper'
-import hkdf from 'js-crypto-hkdf' // for npm
+import { IdentityBuilder } from './interfaces/IIdentityBuilder'
 
-const HASH = 'SHA-256'
-const HASH_LENGTH = 32
-
-/**
- * The IdentityBuilder is used to build identities for IBE
- * In relation to the verifiable randomness beacon used, the implementation
- * should correspond to however that beacon constructs messages for signing.
- */
-interface IdentityBuilder<X> {
-  /**
-   * Build an identity based on the input 'x'
-   * @param x : The identity data
-   * @returns : The constructed identity
-   */
-  build: (x: X) => any
-}
+export * from './interfaces/IIdentityBuilder'
 
 /**
- * An IdentityBuilder for the Ideal Network
+ * Critical runtime errors that can be encountered in the Timelock class
  */
-export const IdealNetworkIdentityHandler: IdentityBuilder<number> = {
-  build: (bn) => build_encoded_commitment(bn, 0),
+export enum TimelockErrors {
+  ERR_UNEXPECTED_TYPE = "The wasm returned something that could not be converted to a UInt8Array."
 }
 
 /**
@@ -64,7 +51,7 @@ export class Timelock {
 
   /**
    * Loads the wasm and constructs a new Timelock instance
-   * @returns
+   * @returns A Timelock instance
    */
   public static async build() {
     await init()
@@ -72,14 +59,14 @@ export class Timelock {
   }
 
   /**
-   * Timelock Encryption: Encrypt the message for the given block
+   * Timelock Encryption: Encrypt the message for the given round of the randomness beacon.
    *
    * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
-   * @param roundNumber: The round of the protocol
-   * @param identityBuilder: Something that imlement IdentityBuilder (e.g. IdealNetworkIdentityHandler)
+   * @param roundNumber: The round of the protocol when the message can be decrypted
+   * @param identityBuilder: An IdentityBuilder implementation
    * @param beaconPublicKey: The public key of the randomness beacon
    * @param ephemeralSecretKey: An ephemeral secret key passed to AES-GCM
-   * @returns The Timelocked ciphertext
+   * @returns The timelocked ciphertext if successful, otherwise an error message.
    */
   public async encrypt(
     encodedMessage: Uint8Array,
@@ -87,38 +74,41 @@ export class Timelock {
     identityBuilder: IdentityBuilder<number>,
     beaconPublicKey: Uint8Array,
     ephemeralSecretKey: Uint8Array
-  ): Promise<any> {
+  ): Promise<Uint8Array> {
     await this.checkWasm()
     let id = identityBuilder.build(roundNumber)
-    return tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey)
+    let ciphertext: number[] = tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey)
+    return new Uint8Array(ciphertext)
   }
 
   /**
    * Timelock decryption: Decrypt the ciphertext using a pulse from the beacon produced at the given block
+   * 
    * @param ciphertext: Ciphertext to be decrypted
    * @param blockNumber: Block number that has the signature for decryption
-   * @returns: The decrypted message (if successful), else nothing (is that what I want?)
+   * @returns: The decrypted message if successful, otherwise an error message.
    */
   public async decrypt(
     ciphertext: Uint8Array,
     signature: Uint8Array
-  ): Promise<any> {
+  ): Promise<Uint8Array> {
     await this.checkWasm()
-    return tld(ciphertext, signature)
+    return new Uint8Array(tld(ciphertext, signature))
   }
 
   /**
    * Decrypt a ciphertext early using the cipher used when encrypting if you know the seed
+   * 
    * @param ciphertext The ciphertext to decrypt
-   * @param ephemeralSecretKey: An ephemeral secret key passed to AES-GCM
+   * @param ephemeralSecretKey: An ephemeral secret key (32-bytes)
    * @returns The plaintext
    */
   public async forceDecrypt(
     ciphertext: Uint8Array,
     ephemeralSecretKey: Uint8Array
-  ): Promise<any> {
+  ): Promise<Uint8Array> {
     await this.checkWasm()
-    return decrypt(ciphertext, ephemeralSecretKey)
+    return new Uint8Array(decrypt(ciphertext, ephemeralSecretKey))
   }
 
   /**
