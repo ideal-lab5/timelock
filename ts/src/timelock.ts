@@ -25,8 +25,6 @@ import init, {
 } from 'timelock-wasm-wrapper'
 import { IdentityBuilder } from './interfaces/IIdentityBuilder'
 
-export * from './interfaces/IIdentityBuilder'
-
 /**
  * Critical runtime errors that can be encountered in the Timelock class
  */
@@ -77,8 +75,7 @@ export class Timelock {
   ): Promise<Uint8Array> {
     await this.checkWasm()
     let id = identityBuilder.build(roundNumber)
-    let ciphertext: number[] = tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey)
-    return new Uint8Array(ciphertext)
+    return new Uint8Array(tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey))
   }
 
   /**

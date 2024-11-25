@@ -15,10 +15,10 @@
  */
 
 const init = jest.fn().mockResolvedValue(undefined)
-const build_encoded_commitment = jest.fn().mockReturnValue(new Uint8Array(0))
-const tle = jest.fn().mockResolvedValue(new Uint8Array(1))
-const tld = jest.fn().mockResolvedValue(new Uint8Array(2))
-const decrypt = jest.fn().mockResolvedValue(new Uint8Array(3))
+const build_encoded_commitment = jest.fn().mockReturnValue(0)
+const tle = jest.fn().mockReturnValue(1)
+const tld = jest.fn().mockReturnValue(2)
+const decrypt = jest.fn().mockReturnValue(3)
 
 export default init
 export { build_encoded_commitment, tle, tld, decrypt }

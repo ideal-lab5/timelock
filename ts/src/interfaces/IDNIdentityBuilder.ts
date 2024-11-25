@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
-export * from './timelock'
-export { IdentityBuilder } from './interfaces/IIdentityBuilder'
-export { IdealNetworkIdentityBuilder } from './interfaces/IDNIdentityBuilder'
+import { IdentityBuilder } from './IIdentityBuilder'
+import { build_encoded_commitment } from 'timelock-wasm-wrapper'
+
+/**
+ * An IdentityBuilder for the Ideal Network
+ */
+export const IdealNetworkIdentityBuilder: IdentityBuilder<number> = {
+    build: (bn) => build_encoded_commitment(bn, 0),
+}
