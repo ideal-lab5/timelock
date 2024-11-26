@@ -16,7 +16,7 @@
 
 import './App.css'
 import React, { useEffect, useState } from 'react'
-import { Timelock, IdealNetworkIdentityHandler } from '@ideallabs/timelock.js'
+import { Timelock, IdealNetworkIdentityBuilder } from '@driemworks/timelock.js'
 import hkdf from 'js-crypto-hkdf'
 
 function App() {
@@ -56,7 +56,7 @@ function App() {
     let ct = await timelock.encrypt(
       encodedMessage,
       roundNumber,
-      IdealNetworkIdentityHandler,
+      IdealNetworkIdentityBuilder,
       pubkey,
       esk.key
     )
