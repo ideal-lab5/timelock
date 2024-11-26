@@ -76,7 +76,7 @@ pub fn tle(
 		serde_wasm_bindgen::from_value(message_js.clone())
 			.map_err(|_| JsError::new("could not decode message"))?;
 
-	let mut ciphertext_bytes: Vec<_> = Vec::new();
+	let mut ciphertext_bytes: Vec<u8> = Vec::new();
 	let ciphertext: TLECiphertext<TinyBLS377> =
 		timelock_encrypt::<TinyBLS377, AESGCMStreamCipherProvider, OsRng>(
 			pp,
@@ -121,15 +121,12 @@ pub fn tld(
 	let ciphertext: TLECiphertext<TinyBLS377> =
 		TLECiphertext::deserialize_compressed(ciphertext_bytes)
 			.map_err(|_| JsError::new("Could not deserialize ciphertext"))?;
-	let result = timelock_decrypt::<TinyBLS377, AESGCMStreamCipherProvider>(
-		ciphertext, sig_point,
-	)
+	let result: Vec<u8> = timelock_decrypt::<
+		TinyBLS377,
+		AESGCMStreamCipherProvider,
+	>(ciphertext, sig_point)
 	.map_err(|e| JsError::new(&format!("decryption has failed {:?}", e)))?;
-	let plaintext: String = String::from_utf8(result).map_err(|_| {
-		JsError::new("Plaintext could not be converted to a string")
-	})?;
-
-	serde_wasm_bindgen::to_value(&plaintext)
+	serde_wasm_bindgen::to_value(&result)
 		.map_err(|_| JsError::new("plaintext conversion has failed"))
 }
 
@@ -143,7 +140,13 @@ pub fn decrypt(
 	let sk_bytes: Vec<u8> =
 		serde_wasm_bindgen::from_value(sk_vec_js.clone())
 			.map_err(|_| JsError::new("could not decode secret key"))?;
-	let secret_key: [u8; 32] = sk_bytes.try_into().unwrap();
+
+	let secret_key: [u8; 32] = sk_bytes.clone().try_into().map_err(|_| {
+		JsError::new(&format!(
+			"The secret key should be 32 bytes, but it was {:?}",
+			sk_bytes.len()
+		))
+	})?;
 
 	let ciphertext_vec: Vec<u8> =
 		serde_wasm_bindgen::from_value(ciphertext_js.clone())
@@ -153,20 +156,14 @@ pub fn decrypt(
 		TLECiphertext::deserialize_compressed(ciphertext_bytes)
 			.map_err(|_| JsError::new("Could not deserialize ciphertext"))?;
 
-	let aes_ciphertext: AESOutput = AESOutput::deserialize_compressed(
-		&mut &ciphertext.body[..],
-	)
-	.unwrap();
+	let aes_ciphertext: AESOutput =
+		AESOutput::deserialize_compressed(&mut &ciphertext.body[..]).unwrap();
 
-	let result =
+	let result: Vec<u8> =
 		AESGCMStreamCipherProvider::decrypt(aes_ciphertext, secret_key)
 			.map_err(|_| JsError::new("Message decryption failed"))?;
 
-	let plaintext: String = String::from_utf8(result).map_err(|_| {
-		JsError::new("Plaintext could not be converted to a string")
-	})?;
-
-	serde_wasm_bindgen::to_value(&plaintext)
+	serde_wasm_bindgen::to_value(&result)
 		.map_err(|_| JsError::new("plaintext conversion has failed"))
 }
 
@@ -189,7 +186,8 @@ pub struct KeyChain {
 	pub sk: [u8; 32],
 }
 
-/// Builds an encoded commitment for use in timelock encryption using the Ideal Network
+/// Builds an encoded commitment for use in timelock encryption using the Ideal
+/// Network
 #[wasm_bindgen]
 pub fn build_encoded_commitment(
 	block_number_js: JsValue,
@@ -216,39 +214,37 @@ pub fn build_encoded_commitment(
 /// It takes in a seed and generates a secret key and public params.
 #[wasm_bindgen]
 pub fn generate_keys(seed: JsValue) -> Result<JsValue, JsError> {
-    let seed_vec: Vec<u8> = serde_wasm_bindgen::from_value(seed)
-        .map_err(|_| JsError::new("Could not convert seed to string"))?;
-    let seed_vec = seed_vec.as_slice();
+	let seed_vec: Vec<u8> = serde_wasm_bindgen::from_value(seed)
+		.map_err(|_| JsError::new("Could not convert seed to string"))?;
+	let seed_vec = seed_vec.as_slice();
 
 	let mut hasher = sha2::Sha256::default();
 	hasher.update(seed_vec);
 	let hash = hasher.finalize();
-    let seed_hash: [u8; 32] = hash.into();
-    let mut rng: ChaCha20Rng = ChaCha20Rng::from_seed(seed_hash);
-    let keypair = w3f_bls::KeypairVT::<TinyBLS377>::generate(&mut rng);
-    let sk_gen: <TinyBLS377 as EngineBLS>::Scalar = keypair.secret.0;
-    let double_public: DoublePublicKey<TinyBLS377> = DoublePublicKey(
-        keypair.into_public_key_in_signature_group().0,
-        keypair.public.0,
-    );
-    let mut sk_bytes = Vec::new();
-    sk_gen.serialize_compressed(&mut sk_bytes).unwrap();
-    let mut double_public_bytes = Vec::new();
-    double_public
-        .serialize_compressed(&mut double_public_bytes)
-        .unwrap();
-    let kc = KeyChain {
-        double_public: double_public_bytes.try_into().unwrap(),
-        sk: sk_bytes.try_into().unwrap(),
-    };
-    serde_wasm_bindgen::to_value(&kc)
-        .map_err(|_| JsError::new("could not convert secret key to JsValue"))
+	let seed_hash: [u8; 32] = hash.into();
+	let mut rng: ChaCha20Rng = ChaCha20Rng::from_seed(seed_hash);
+	let keypair = w3f_bls::KeypairVT::<TinyBLS377>::generate(&mut rng);
+	let sk_gen: <TinyBLS377 as EngineBLS>::Scalar = keypair.secret.0;
+	let double_public: DoublePublicKey<TinyBLS377> = DoublePublicKey(
+		keypair.into_public_key_in_signature_group().0,
+		keypair.public.0,
+	);
+	let mut sk_bytes = Vec::new();
+	sk_gen.serialize_compressed(&mut sk_bytes).unwrap();
+	let mut double_public_bytes = Vec::new();
+	double_public.serialize_compressed(&mut double_public_bytes).unwrap();
+	let kc = KeyChain {
+		double_public: double_public_bytes.try_into().unwrap(),
+		sk: sk_bytes.try_into().unwrap(),
+	};
+	serde_wasm_bindgen::to_value(&kc)
+		.map_err(|_| JsError::new("could not convert secret key to JsValue"))
 }
 
 #[cfg(test)]
 mod test {
 	use super::*;
-	
+
 	use std::any::Any;
 	use w3f_bls::{EngineBLS, TinyBLS377};
 	use wasm_bindgen_test::*;
@@ -378,12 +374,10 @@ mod test {
 					assert_ne!(ciphertext_convert, message);
 				},
 				TestStatusReport::DecryptSuccess { plaintext } => {
-					let plaintext_convert: String =
+					let plaintext_convert: Vec<u8> =
 						serde_wasm_bindgen::from_value(plaintext.clone())
 							.unwrap();
-					let plaintext_compare =
-						plaintext_convert.as_bytes().to_vec();
-					assert_eq!(plaintext_compare, message);
+					assert_eq!(plaintext_convert, message);
 				},
 				_ => panic!("The ciphertext is falsy"),
 			},
@@ -408,12 +402,10 @@ mod test {
 					assert_ne!(ciphertext_convert, message);
 				},
 				TestStatusReport::DecryptSuccess { plaintext } => {
-					let plaintext_convert: String =
+					let plaintext_convert: Vec<u8> =
 						serde_wasm_bindgen::from_value(plaintext.clone())
 							.unwrap();
-					let plaintext_compare =
-						plaintext_convert.as_bytes().to_vec();
-					assert_eq!(plaintext_compare, message);
+					assert_eq!(plaintext_convert, message);
 				},
 				_ => panic!("The ciphertext is falsy"),
 			},
