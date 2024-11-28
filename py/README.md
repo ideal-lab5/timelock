@@ -2,12 +2,6 @@
 
 Python bindings for the [Timelock](https://github.com/ideal-lab5/timelock) library. It enables timelock encryption and decryption with support for Drand's quicknet. In the futurue we will expand the supported networks to include the IDN beacon.
 
-## Install
-
-``` sh
-pip install timelock
-```
-
 ## Build
 
 Build with:
@@ -15,6 +9,13 @@ Build with:
 ```
 pip install --upgrade build
 python -m build
+```
+
+## Publish
+
+``` sh
+pip install --upgrade twine
+twine upload --repository timelock dist/*
 ```
 
 ## Usage
