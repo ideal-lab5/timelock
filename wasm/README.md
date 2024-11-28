@@ -23,3 +23,12 @@ pip install maturin
 export PYO3_CROSS_PYTHON_VERSION="3.10"
 maturin develop
 ```
+
+#### Publish
+
+``` sh
+# creat a release build
+maturin build --release
+# publish to testpypi
+
+```
