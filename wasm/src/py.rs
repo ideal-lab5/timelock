@@ -1,0 +1,144 @@
+/*
+ * Copyright 2024 by Ideal Labs, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//! This module provides wasm-bindings for the Timelock library that are compatible with Python
+/*
+ * Copyright 2024 by Ideal Labs, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//! Python bindings for timelock
+
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use codec::Encode;
+use pyo3::prelude::*;
+use pyo3::types::{PyBytes, PyList};
+use pyo3::wrap_pyfunction;
+use rand_chacha::ChaCha20Rng;
+use rand_core::{OsRng, SeedableRng};
+use serde::{Deserialize, Serialize};
+use serde_big_array::BigArray;
+use sha2::Digest;
+use sp_consensus_beefy_etf::{known_payloads, Commitment, Payload};
+use timelock::{
+	curves::drand::TinyBLS381,
+	ibe::fullident::Identity,
+	stream_ciphers::{
+		AESGCMStreamCipherProvider, AESOutput, StreamCipherProvider,
+	},
+	tlock::{tld as timelock_decrypt, tle as timelock_encrypt, TLECiphertext},
+};
+use w3f_bls::{DoublePublicKey, DoublePublicKeyScheme, EngineBLS};
+
+/// The encrypt wrapper used by the Python bindings to call tlock.rs encrypt function
+/// * 'id_py': ID string for which the message will be encrypted
+/// * 'message_py': Message which will be encrypted
+/// * 'sk_py': secret key passed in from the Python side
+/// * 'p_pub_py': public key commitment for the IBE system
+#[pyfunction]
+fn tle(
+	round_number: u64,
+	message: Vec<u8>,
+	sk_py: Vec<u8>,
+	p_pub_py: Vec<u8>,
+) -> PyResult<Vec<u8>> {
+	let msk_bytes: [u8; 32] = sk_py.try_into().map_err(|_| {
+		PyErr::new::<pyo3::exceptions::PyValueError, _>(
+			"Could not convert secret key",
+		)
+	})?;
+
+	let pp = <TinyBLS381 as EngineBLS>::PublicKeyGroup::deserialize_compressed(
+		&p_pub_py[..],
+	)
+	.unwrap();
+	let id = {
+		let mut hasher = sha2::Sha256::new();
+		hasher.update(round_number.to_be_bytes());
+		hasher.finalize().to_vec()
+	};
+	let identity = Identity::new(b"", vec![id]);
+
+	let ciphertext =
+		timelock_encrypt::<TinyBLS381, AESGCMStreamCipherProvider, OsRng>(
+			pp, msk_bytes, &message, identity, OsRng,
+		)
+		.map_err(|_| {
+			PyErr::new::<pyo3::exceptions::PyValueError, _>("Encryption failed")
+		})?;
+
+	let mut ciphertext_bytes: Vec<u8> = Vec::new();
+	ciphertext.serialize_compressed(&mut ciphertext_bytes).map_err(|_| {
+		PyErr::new::<pyo3::exceptions::PyValueError, _>(
+			"Ciphertext serialization failed",
+		)
+	})?;
+
+	Ok(ciphertext_bytes)
+}
+
+/// The decrypt wrapper used by the Python bindings to call the timelock decrypt function
+/// * 'ciphertext_bytes': The ciphertext bytes to be decrypted
+/// * 'sig_bytes': A signature (output of IBE Extract)
+#[pyfunction]
+fn tld(ciphertext_bytes: Vec<u8>, sig_bytes: Vec<u8>) -> PyResult<Vec<u8>> {
+	let sig_point =
+		<TinyBLS381 as EngineBLS>::SignatureGroup::deserialize_compressed(
+			sig_bytes.as_slice(),
+		)
+		.map_err(|_| {
+			PyErr::new::<pyo3::exceptions::PyValueError, _>(
+				"Could not deserialize signature",
+			)
+		})?;
+
+	let ciphertext: TLECiphertext<TinyBLS381> =
+		TLECiphertext::deserialize_compressed(ciphertext_bytes.as_slice())
+			.map_err(|_| {
+				PyErr::new::<pyo3::exceptions::PyValueError, _>(
+					"Could not deserialize ciphertext",
+				)
+			})?;
+
+	let result = timelock_decrypt::<TinyBLS381, AESGCMStreamCipherProvider>(
+		ciphertext, sig_point,
+	)
+	.map_err(|e| {
+		PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+			"Decryption failed: {:?}",
+			e
+		))
+	})?;
+    
+	Ok(result)
+}
+
+#[pymodule]
+#[pyo3(name = "timelock_wasm_wrapper")]
+fn py(m: &Bound<'_, PyModule>) -> PyResult<()> {
+	m.add_function(wrap_pyfunction!(tle, m)?)?;
+	m.add_function(wrap_pyfunction!(tld, m)?)?;
+	Ok(())
+}
