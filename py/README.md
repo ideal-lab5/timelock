@@ -1,6 +1,14 @@
 # Python Bindings for the Timelock Library
 
-Python bindings for the [Timelock](https://github.com/ideal-lab5/timelock) library. It enables timelock encryption and decryption with support for Drand's quicknet. In the futurue we will expand the supported networks to include the IDN beacon.
+Python bindings for the [Timelock](https://github.com/ideal-lab5/timelock) library. It enables timelock encryption and decryption with support for Drand's quicknet. In the futurue we will expand the supported networks to include other beacons as well.
+
+## Install
+
+The library can be installed [from PyPi](https://pypi.org/project/timelock/):
+
+``` sh
+pip install timelock
+```
 
 ## Build
 
@@ -13,9 +21,11 @@ python -m build
 
 ## Publish
 
+Note that this requires the timelock-wasm-wrapper python package be published as well.
+
 ``` sh
 pip install --upgrade twine
-twine upload --repository timelock dist/*
+twine upload --repository testpypi dist/*
 ```
 
 ## Usage

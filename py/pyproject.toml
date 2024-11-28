@@ -1,6 +1,6 @@
 [project]
 name = "timelock"
-version = "0.0.1"
+version = "0.0.1-dev"
 authors = [
   { name="Ideal Labs", email="hello@idealabs.network" },
 ]
@@ -12,10 +12,16 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "timelock_wasm_wrapper>=0.0.1"
+]
 
 [tool.setuptools]
 packages = ["timelock"]
 package-dir = { ""="src" }
+
+[tool.setuptools.package-data]
+timelock = ["*.so", "*.pyd"]  # Add the shared library files
 
 [project.urls]
 Homepage = "https://github.com/ideal-lab5/timelock"
