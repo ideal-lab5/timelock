@@ -74,7 +74,8 @@ pub trait StreamCipherProvider<const N: usize> {
 	) -> Result<Vec<u8>, Error>;
 }
 
-/// This provides the AES_GCM stream cipher, allowing message to be encrypted and decrypted under AES_GCM
+/// This provides the AES_GCM stream cipher, allowing message to be encrypted
+/// and decrypted under AES_GCM
 pub struct AESGCMStreamCipherProvider;
 impl StreamCipherProvider<32> for AESGCMStreamCipherProvider {
 	const CIPHER_SUITE: &'static [u8] = b"AES_GCM_";
@@ -92,7 +93,6 @@ impl StreamCipherProvider<32> for AESGCMStreamCipherProvider {
 		key: [u8; 32],
 		mut rng: R,
 	) -> Result<Self::Ciphertext, Error> {
-
 		let cipher =
 			Aes256Gcm::new(generic_array::GenericArray::from_slice(&key));
 

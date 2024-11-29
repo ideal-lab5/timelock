@@ -43,11 +43,12 @@ fn tlock_tinybls377<E: EngineBLS>(
 	let _m = tld::<E, AESGCMStreamCipherProvider>(ct, sig.0).unwrap();
 }
 
-/// Benchmarks the `tlock_tinybls377` function using the Criterion benchmarking library.
+/// Benchmarks the `tlock_tinybls377` function using the Criterion benchmarking
+/// library.
 ///
-/// This function sets up a series of benchmarks to measure the performance of the
-/// `tlock_tinybls377` function with varying input sizes. The benchmarks are grouped
-/// under the name "tlock".
+/// This function sets up a series of benchmarks to measure the performance of
+/// the `tlock_tinybls377` function with varying input sizes. The benchmarks are
+/// grouped under the name "tlock".
 fn tlock(c: &mut Criterion) {
 	static KB: usize = 1024;
 
