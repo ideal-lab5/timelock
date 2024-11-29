@@ -17,6 +17,7 @@ wasm-pack build --target web --out-dir pkg
 Python compatible wasm output is generated with [PyO3](https://pyo3.rs/v0.23.2/).
 
 First create a virtual env, then run:
+
 ``` sh
 pip install maturin
 # specify your python version
@@ -27,8 +28,8 @@ maturin develop
 #### Publish
 
 ``` sh
-# creat a release build
+# Create a release build
 maturin build --release
-# publish to testpypi
-
+# publish with twine
+twine upload dist/* timelock
 ```

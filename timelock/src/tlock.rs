@@ -67,7 +67,6 @@ pub enum Error {
 /// * `message`: The message to encrypt
 /// * `id`: The identity to encrypt for
 /// * `rng`: A CSPRNG
-///
 pub fn tle<E, S, R>(
 	p_pub: E::PublicKeyGroup,
 	secret_key: OpaqueSecretKey,
@@ -102,7 +101,6 @@ where
 ///
 /// * `ciphertext`: A TLECiphertext encrypted under some supported protocol
 /// * `signature`: A BLS signature that allows decryption of the ciphertext
-///
 pub fn tld<E, S>(
 	ciphertext: TLECiphertext<E>,
 	signature: E::SignatureGroup,

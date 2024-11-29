@@ -15,7 +15,10 @@
 #
 import timelock_wasm_wrapper
 
-class Timelock:
+# The Timelock class is a thin wrapper around the output from PyO3
+# It opinionates the input, expecting public keys to be represented as hex strings
+# and encryption messages being strings.
+class Timelock: 
     def __init__(self, pk_hex):
         self.public_key = bytearray.fromhex(pk_hex)
 
