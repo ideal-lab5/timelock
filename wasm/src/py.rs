@@ -29,6 +29,7 @@ use timelock::{
 		TLECiphertext,
 	},
 };
+
 /// The encrypt wrapper used by the Python bindings to call tlock.rs encrypt
 /// function
 /// * 'id_py': ID string for which the message will be encrypted
