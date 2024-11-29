@@ -29,7 +29,7 @@ maturin develop --features "python"
 
 ``` sh
 # Create a release build
-maturin build --release
-# publish with twine
-twine upload dist/* timelock
+maturin build --features "python" --release
+# publish to PyPi with maturing
+maturin publish --features "python"
 ```
