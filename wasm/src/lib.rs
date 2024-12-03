@@ -15,4 +15,6 @@
  */
 
 pub mod js;
+
+#[cfg(feature = "python")]
 pub mod py;

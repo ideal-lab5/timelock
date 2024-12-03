@@ -1,6 +1,6 @@
 # WASM Bindings for Timelock
 
-This crate provides wasm compatibility for the timelock crate. It provides compatibility for both javascript and python (3+).
+This crate provides wasm compatibility for the timelock crate. It provides compatibility for both JavaScript and Python (3+).
 
 ## Build
 
@@ -22,14 +22,14 @@ First create a virtual env, then run:
 pip install maturin
 # specify your python version
 export PYO3_CROSS_PYTHON_VERSION="3.10"
-maturin develop
+maturin develop --features "python"
 ```
 
 #### Publish
 
 ``` sh
 # Create a release build
-maturin build --release
-# publish with twine
-twine upload dist/* timelock
+maturin build --features "python" --release
+# publish to PyPi with maturing
+maturin publish --features "python"
 ```
