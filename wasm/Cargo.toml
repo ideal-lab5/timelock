@@ -1,6 +1,6 @@
 [package]
 name = "timelock_wasm_wrapper"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 license = "Apache-2.0"
 description = "Wasm bidings for the timelock encryption crate"
@@ -37,8 +37,11 @@ rand_chacha = { version = "0.3.1", default-features = false }
 w3f-bls = { version = "0.1.3", default-features = false }
 sp-consensus-beefy-etf = { git = "https://github.com/ideal-lab5/idn-sdk.git", features = ["bls-experimental"]}
 sha2 = { version = "0.10.2", default-features = false }
-pyo3 = { version = "0.23.1", features = ["extension-module", "macros"], default-features = false }
-libc = "0.2"  # Make sure to use the latest version available
+pyo3 = { version = "0.23.1", features = ["extension-module", "macros"], default-features = false, optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.0"
+
+[features]
+default = []
+python = [ "pyo3" ]
