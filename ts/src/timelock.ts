@@ -108,11 +108,9 @@ export class Timelock {
       const beaconPublicKey = u8a(beaconPublicKeyHex)
       const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
       const id = await identityBuilder.build(roundNumber)
-      return ok(
-        new Uint8Array(
-          tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey, this.curveId)
-        )
-      )
+      const ciphertext = tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey, this.curveId)
+      const result = new Uint8Array(ciphertext)
+      return ok(result)
     } catch (err) {
       return error(err.message)
     }
