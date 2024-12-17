@@ -1,6 +1,6 @@
 # Timelock Encyrption TypeScript Wrapper
 
-This library provides a TypeScript wrapper for a WebAssembly (WASM) implementation of timelock encryption, designed for seamless use in web-based environments. It integrates easily with frameworks like React and supports timelock encryption, timelock decryption, and AES-GCM decryption functionality.
+This is a typescript library for timelock encryption. It is a "thin" wrapper that calls the WebAssembly (WASM) implementation of timelock encryption. It is designed for use in web-based environments and easily integrates with frameworks like React, Vue, etc. The library supports both the experiemental [Ideal Network beacon](https://docs.idealabs.network) as well as [Drand's](https://drand.love) Quicknet.
 
 ## Installation
 
@@ -10,25 +10,51 @@ The package can be installed from the npm registry with:
 npm i @ideallabs/timelock.js
 ```
 
+## Build
+
+From the root, run
+
+```
+npm run build
+```
+
+In addition to transpiling the project, this builds the latest wasm and makes it available to the typescript wrapper.
+
+> Note: After running, navigate to the produced dist/index.js file and add `.js` endings to imports. See: https://github.com/ideal-lab5/timelock/issues/8
+
+
+## Test
+
+From the root, run:
+
+```shell
+npm run test
+```
+
 ## Usage
+
+See the [example](../examples/web/react-tlock-demo/) for a full demonstration.
 
 ### Initialization
 
 Before using any encryption or decryption methods, initialize the library by creating a Timelock instance:
 
 ``` js
-import { Timelock } from '@ideallabs/timelock.js'
-
-const timelock = await Timelock.build();
+import { SupportedBeacon, Timelock } from '@ideallabs/timelock.js'
+// Use curve BLS12-381 (e.g. Drand Quicknet)
+const timelockBls12_381 = await Timelock.build(SupportedCurve.BLS12_381);
+// Use curve BLS12-377 (e.g. IDN Beacon)
+const timelockBls12_377 = await Timelock.build(SupportedCurve.BLS12_377);
 ```
 
 ### Encrypting a Message
 
-Encrypt data for a specific protocol round:
+Messages can be encrypted for future rounds of a supported beacon's protocol by specifying the be acon public key, round number, and message. Internally the library uses AES-GCM by default (this can be customized by implementing a custom [StreamCipherProvider](https://docs.rs/timelock/0.0.1/timelock/stream_ciphers/trait.StreamCipherProvider.html)).
 
 ``` js
 // import a pre-defined IdentityHandler implementation or create your own
 import { Timelock, IdealNetworkIdentityHandler } from '@ideallabs/timelock.js'
+
 import hkdf from 'js-crypto-hkdf'
 // 1. Setup parameters for encryption
 // use an hkdf to securely generate an ephemeral secret key for AES-GCM encryption
@@ -53,10 +79,16 @@ let ct = await timelock.encrypt(
   roundNumber,
   IdealNetworkIdentityHandler,
   pubkey,
-  esk.key
+  esk.key,
 )
 console.log('Timelocked ciphertext: ' + JSON.stringify(ct))
 ```
+
+#### Identity Handlers
+
+Any given randomness beacon may sign messages in its own unique way. For example, in Drand's Quicknet the beacon signs the sha256 hash of the round number of the procol as a big endian array (8 bytes from a u64 round number). In the Ideal network, the message is the sha256 hash of the round number concatenated with the validator set id of the set of validators that produced the beacon. 
+
+This library offers pre-defined identity handlers for usage with Drand Quicknet and the IDN beacon, the [DrandIdentityHandler](./src/interfaces/DrandIdentityBuilder.ts) and  [IdealNetworkIdentityHandler](./src/interfaces/IDNIdentityBuilder.ts), respectively. For beacons that construct messages differently, a custom identity handler must be implemented. 
 
 ### Decrypting a Message
 
@@ -84,22 +116,6 @@ const length = 32
 const esk = await hkdf.compute(seed, hash, length, '')
 const plaintext = await timelock.forceDecrypt(ciphertext, esk.key);
 console.log('Plaintext:', plaintext);
-```
-
-## Build
-
-Build the project with:
-
-``` shell
-npm run build
-```
-
-## Test
-
-From the root, run:
-
-```shell
-npm run test
 ```
 
 ## License

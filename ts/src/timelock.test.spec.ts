@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { expect, describe } from '@jest/globals'
-import { Timelock } from './timelock'
+import { expect, describe, test } from '@jest/globals'
+import { Result, SupportedCurve, Timelock, u8a } from './timelock'
 import { IdealNetworkIdentityBuilder } from './interfaces/IDNIdentityBuilder'
 import init, {
   build_encoded_commitment,
@@ -26,22 +26,26 @@ import init, {
 
 jest.mock('timelock-wasm-wrapper')
 
-describe('Timelock Class', () => {
+describe('Timelock Encryption', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   test('should initialize WASM and create an instance', async () => {
-    const instance = await Timelock.build()
+    const instance = await Timelock.build(SupportedCurve.BLS12_377)
     expect(init).toHaveBeenCalledTimes(1)
     expect(instance).toBeInstanceOf(Timelock)
   })
 
   test('should encrypt data using tle', async () => {
-    const instance = await Timelock.build()
+    const instance = await Timelock.build(SupportedCurve.BLS12_377)
     const encodedMessage = new Uint8Array([1, 2, 3])
-    const beaconPublicKey = new Uint8Array([4, 5, 6])
-    const ephemeralSecretKey = new Uint8Array([7, 8, 9])
+
+    const beaconPublicKeyHex = 'abcdef'
+    const ephemeralSecretKeyHex = '123456'
+
+    const beaconPublicKey = u8a(beaconPublicKeyHex)
+    const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
 
     const expectedResult = new Uint8Array(1);
 
@@ -49,8 +53,8 @@ describe('Timelock Class', () => {
       encodedMessage,
       42,
       IdealNetworkIdentityBuilder,
-      beaconPublicKey,
-      ephemeralSecretKey
+      beaconPublicKeyHex,
+      ephemeralSecretKeyHex,
     )
 
     expect(result).toStrictEqual(expectedResult)
@@ -59,31 +63,35 @@ describe('Timelock Class', () => {
       0,
       encodedMessage,
       ephemeralSecretKey,
-      beaconPublicKey
+      beaconPublicKey,
+      SupportedCurve.BLS12_377
     )
   })
 
   test('should decrypt data using tld', async () => {
-    const instance = await Timelock.build()
+    const instance = await Timelock.build(SupportedCurve.BLS12_377)
     const ciphertext = new Uint8Array([10, 11, 12])
-    const signature = new Uint8Array([13, 14, 15])
+    const signatureHex = '123456'
+    const signature = u8a(signatureHex)
 
     const expectedResult = new Uint8Array(2);
-    const result = await instance.decrypt(ciphertext, signature)
+    const result = await instance.decrypt(ciphertext, signatureHex)
 
-    expect(tld).toHaveBeenCalledWith(ciphertext, signature)
     expect(result).toStrictEqual(expectedResult)
+    expect(tld).toHaveBeenCalledWith(ciphertext, signature, SupportedCurve.BLS12_377)
   })
 
   test('should force decrypt data using decrypt', async () => {
-    const instance = await Timelock.build()
+    const instance = await Timelock.build(SupportedCurve.BLS12_377)
     const ciphertext = new Uint8Array([16, 17, 18])
-    const ephemeralSecretKey = new Uint8Array([19, 20, 21])
+    const ephemeralSecretKey = 'qwerty'
+    const esk = u8a(ephemeralSecretKey);
 
     const expectedResult = new Uint8Array(3)
     const result = await instance.forceDecrypt(ciphertext, ephemeralSecretKey)
 
-    expect(decrypt).toHaveBeenCalledWith(ciphertext, ephemeralSecretKey)
     expect(result).toStrictEqual(expectedResult)
+
+    expect(decrypt).toHaveBeenCalledWith(ciphertext, esk, SupportedCurve.BLS12_377)
   })
 })

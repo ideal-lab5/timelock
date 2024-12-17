@@ -21,5 +21,5 @@ import { build_encoded_commitment } from 'timelock-wasm-wrapper'
  * An IdentityBuilder for the Ideal Network
  */
 export const IdealNetworkIdentityBuilder: IdentityBuilder<number> = {
-    build: (bn) => build_encoded_commitment(bn, 0),
+    build: (bn) => Promise.resolve(build_encoded_commitment(bn, 0)),
 }
