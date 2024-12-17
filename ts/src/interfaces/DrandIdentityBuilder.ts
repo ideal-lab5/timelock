@@ -14,27 +14,9 @@
  * limitations under the License.
  */
 
+import { u8a } from '../timelock';
 import { IdentityBuilder } from './IIdentityBuilder'
 import { Buffer } from "buffer";
-
-/**
- * Convert a hex encoded string to a uint8array
- * @param hexString The hex string (e.g. 0xabc123...)
- * @returns A Uint8Array
- */
-function hexToUint8Array(hexString) {
-    if (hexString.length % 2 !== 0) {
-        throw new Error("Hex string must have an even length.");
-    }
-
-    const uint8Array = new Uint8Array(hexString.length / 2);
-
-    for (let i = 0; i < hexString.length; i += 2) {
-        uint8Array[i / 2] = parseInt(hexString.substr(i, 2), 16);
-    }
-
-    return uint8Array;
-}
 
 /**
  * Compute the sha256 hash of the data
@@ -56,7 +38,7 @@ async function sha256(data: Uint8Array): Promise<string> {
 function generateMessage(round: number): Promise<Uint8Array> {
     const buffer = Buffer.alloc(8);
     buffer.writeBigUInt64BE(BigInt(round), 0);
-    return sha256(buffer).then(result => hexToUint8Array(result))
+    return sha256(buffer).then(result => u8a(result))
 }
 
 /**
