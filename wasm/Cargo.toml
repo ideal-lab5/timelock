@@ -1,6 +1,6 @@
 [package]
 name = "timelock_wasm_wrapper"
-version = "0.0.2"
+version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
 description = "Wasm bidings for the timelock encryption crate"
@@ -44,4 +44,4 @@ wasm-bindgen-test = "0.3.0"
 
 [features]
 default = []
-python = [ "pyo3" ]
+python = ["pyo3", "pyo3/abi3"]

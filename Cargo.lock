@@ -3696,14 +3696,13 @@ dependencies = [
 
 [[package]]
 name = "timelock_wasm_wrapper"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "ark-bls12-381",
  "ark-ec",
  "ark-serialize",
  "ark-std",
  "getrandom",
- "libc",
  "parity-scale-codec",
  "pyo3",
  "rand_chacha",
