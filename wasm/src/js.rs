@@ -300,12 +300,8 @@ mod test {
 		let seed = serde_wasm_bindgen::to_value(seed_bytes).unwrap();
 
 		let (p_pub, sk) = generate_keys::<E>(seed);
-		// let mut sk_bytes: Vec<u8> = Vec::new();
-		// sk.serialize_compressed(&mut sk_bytes).unwrap();
 		let mut sk_js: JsValue =
 			serde_wasm_bindgen::to_value(sk.as_slice()).unwrap();
-		// let mut p_pub_bytes: Vec<u8> = Vec::new();
-		// p_pub.1.serialize_compressed(&mut p_pub_bytes).unwrap();
 		let p_pub_js: JsValue =
 			serde_wasm_bindgen::to_value(&p_pub[48..]).unwrap();
 
