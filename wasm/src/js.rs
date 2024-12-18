@@ -180,7 +180,6 @@ pub fn decrypt(
 
 /// Bypass Tlock by attempting to decrypt the ciphertext with some secret key
 /// under the stream cipher only
-// #[wasm_bindgen]
 pub fn do_decrypt<E: EngineBLS>(
 	ciphertext_js: JsValue,
 	sk_vec_js: JsValue,
