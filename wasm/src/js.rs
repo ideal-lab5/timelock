@@ -366,8 +366,6 @@ mod test {
 				beacon.into(),
 			) {
 				Ok(ciphertext) => {
-					// let sk_js_early: JsValue =
-					// 	serde_wasm_bindgen::to_value(&sk_bytes).unwrap();
 					let ciphertext_clone = ciphertext.clone();
 					handler(TestStatusReport::EncryptSuccess { ciphertext });
 					match decrypt(ciphertext_clone, sk_js, beacon.into()) {
