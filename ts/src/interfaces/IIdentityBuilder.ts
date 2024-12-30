@@ -25,5 +25,5 @@ export interface IdentityBuilder<X> {
    * @param x : The identity data
    * @returns : The constructed identity
    */
-  build: (x: X) => Uint8Array
+  build: (x: X) => Promise<Uint8Array>
 }

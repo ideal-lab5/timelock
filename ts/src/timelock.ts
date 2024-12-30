@@ -33,6 +33,27 @@ export enum TimelockErrors {
 }
 
 /**
+ * Curves supported by the timelock library
+ */
+export enum SupportedCurve {
+  BLS12_377 = 'bls12_377',
+  BLS12_381 = 'bls12_381'
+}
+
+/**
+ * A wrapper type to handle generic results 
+ */
+export type Result<T> = T | Error
+
+function ok<T>(data: T | null): Result<T> {
+  return data
+}
+
+function error<T>(message: string): Result<T> {
+  return new Error(message)
+}
+
+/**
  * The Timelock class handles initialization of the WASM modules required to use the Timelock library
  * from web based contexts. It gracefully ensures that the WASM is available before attempting to call the respective functions.
  */
@@ -40,20 +61,29 @@ export class Timelock {
   /**
    * Indicates if the wasm has been initialized or not
    */
-  private wasmReady: false
+  private wasmReady: boolean
+
+  /**
+   * The curve used by the beacon
+   */
+  public curveId: SupportedCurve
 
   /**
    * A private constructor to enforce usage of `build`
    */
-  private constructor() { }
+  private constructor(curveId: SupportedCurve) {
+    this.curveId = curveId
+    this.wasmReady = false
+  }
 
   /**
    * Loads the wasm and constructs a new Timelock instance
+   * @param curveId: The curve used by the beacon 
    * @returns A Timelock instance
    */
-  public static async build() {
+  public static async build(curveId: SupportedCurve) {
     await init()
-    return new Timelock()
+    return new Timelock(curveId)
   }
 
   /**
@@ -62,20 +92,28 @@ export class Timelock {
    * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
    * @param roundNumber: The round of the protocol when the message can be decrypted
    * @param identityBuilder: An IdentityBuilder implementation
-   * @param beaconPublicKey: The public key of the randomness beacon
-   * @param ephemeralSecretKey: An ephemeral secret key passed to AES-GCM
+   * @param beaconPublicKeyHex: The hex-encoded public key of the randomness beacon
+   * @param ephemeralSecretKeyHex: A hex-encoded ephemeral secret key passed to AES-GCM
    * @returns The timelocked ciphertext if successful, otherwise an error message.
    */
   public async encrypt(
     encodedMessage: Uint8Array,
     roundNumber: number,
     identityBuilder: IdentityBuilder<number>,
-    beaconPublicKey: Uint8Array,
-    ephemeralSecretKey: Uint8Array
-  ): Promise<Uint8Array> {
-    await this.checkWasm()
-    let id = identityBuilder.build(roundNumber)
-    return new Uint8Array(tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey))
+    beaconPublicKeyHex: string,
+    ephemeralSecretKeyHex: string
+  ): Promise<Result<Uint8Array>> {
+    try {
+      await this.checkWasm()
+      const beaconPublicKey = u8a(beaconPublicKeyHex)
+      const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
+      const id = await identityBuilder.build(roundNumber)
+      const ciphertext = tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey, this.curveId)
+      const result = new Uint8Array(ciphertext)
+      return ok(result)
+    } catch (err) {
+      return error(err.message)
+    }
   }
 
   /**
@@ -87,10 +125,15 @@ export class Timelock {
    */
   public async decrypt(
     ciphertext: Uint8Array,
-    signature: Uint8Array
-  ): Promise<Uint8Array> {
-    await this.checkWasm()
-    return new Uint8Array(tld(ciphertext, signature))
+    signatureHex: string
+  ): Promise<Result<Uint8Array>> {
+    try {
+      await this.checkWasm()
+      const signature = u8a(signatureHex)
+      return ok(new Uint8Array(tld(ciphertext, signature, this.curveId)))
+    } catch (err) {
+      return error(err.message)
+    }
   }
 
   /**
@@ -102,19 +145,48 @@ export class Timelock {
    */
   public async forceDecrypt(
     ciphertext: Uint8Array,
-    ephemeralSecretKey: Uint8Array
-  ): Promise<Uint8Array> {
-    await this.checkWasm()
-    return new Uint8Array(decrypt(ciphertext, ephemeralSecretKey))
+    ephemeralSecretKeyHex: string
+  ): Promise<Result<Uint8Array>> {
+    try {
+      await this.checkWasm()
+      const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
+      return ok(new Uint8Array(decrypt(ciphertext, ephemeralSecretKey, this.curveId)))
+    } catch (err) {
+      return error(err.message)
+    }
   }
 
   /**
    * Check if the wasm has been initialized.
-   * If it hasn't, gracefully load it and continue.
+   * If it hasn't, gracefully load it and continue, else throw an error if it is unavailable
    */
-  async checkWasm() {
+  private async checkWasm() {
     if (!this.wasmReady) {
-      await init()
+      try {
+        await init()
+        this.wasmReady = true
+      } catch (err) {
+        throw new Error("Failed to initialize WASM " + err.message)
+      }
     }
   }
+}
+
+/**
+ * Converts the hex-encoded string to a Uint8Array
+ * @param hex A hex-encoded string
+ * @returns A Uint8Array
+ */
+export function u8a(hexString: string): Uint8Array {
+  const length = hexString.length;
+  if (length % 2 !== 0) {
+    throw new Error("Invalid hex string: Length must be even.");
+  }
+
+  const bytes = new Uint8Array(length / 2);
+  for (let i = 0; i < length; i += 2) {
+    bytes[i / 2] = (parseInt(hexString[i], 16) << 4) | parseInt(hexString[i + 1], 16);
+  }
+
+  return bytes;
 }
