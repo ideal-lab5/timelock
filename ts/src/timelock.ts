@@ -22,7 +22,7 @@ import init, {
   tle,
   tld,
   decrypt,
-} from 'timelock-wasm-wrapper'
+} from '@ideallabs/timelock_wasm_wrapper'
 import { IdentityBuilder } from './interfaces/IIdentityBuilder'
 
 /**

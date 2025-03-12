@@ -15,7 +15,7 @@
  */
 
 import { IdentityBuilder } from './IIdentityBuilder'
-import { build_encoded_commitment } from 'timelock-wasm-wrapper'
+import { build_encoded_commitment } from '@ideallabs/timelock_wasm_wrapper'
 
 /**
  * An IdentityBuilder for the Ideal Network
