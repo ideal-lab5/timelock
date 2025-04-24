@@ -22,8 +22,8 @@ use serde::{Serialize, Deserialize};
 use timelock::{
 	curves::drand::TinyBLS381,
 	ibe::fullident::Identity,
-	stream_ciphers::{
-		AESGCMStreamCipherProvider, AESOutput, StreamCipherProvider,
+	block_ciphers::{
+		AESGCMBlockCipherProvider, AESOutput, BlockCipherProvider,
 	},
 	tlock::{tld as timelock_decrypt, tle as timelock_encrypt, TLECiphertext},
 };
@@ -99,7 +99,7 @@ pub fn do_tle<E: EngineBLS>(
 
 	let mut ciphertext_bytes: Vec<u8> = Vec::new();
 	let ciphertext: TLECiphertext<E> =
-		timelock_encrypt::<E, AESGCMStreamCipherProvider, OsRng>(
+		timelock_encrypt::<E, AESGCMBlockCipherProvider, OsRng>(
 			pp,
 			msk_bytes,
 			&message_bytes,
@@ -155,7 +155,7 @@ fn do_tld<E: EngineBLS>(
 	let ciphertext: TLECiphertext<E> =
 		TLECiphertext::deserialize_compressed(ciphertext_bytes)
 			.map_err(|_| JsError::new("Could not deserialize ciphertext"))?;
-	let result: Vec<u8> = timelock_decrypt::<E, AESGCMStreamCipherProvider>(
+	let result: Vec<u8> = timelock_decrypt::<E, AESGCMBlockCipherProvider>(
 		ciphertext, sig_point,
 	)
 	.map_err(|e| JsError::new(&format!("decryption has failed {:?}", e)))?;
@@ -207,7 +207,7 @@ pub fn do_decrypt<E: EngineBLS>(
 		AESOutput::deserialize_compressed(&mut &ciphertext.body[..]).unwrap();
 
 	let result: Vec<u8> =
-		AESGCMStreamCipherProvider::decrypt(aes_ciphertext, secret_key)
+		AESGCMBlockCipherProvider::decrypt(aes_ciphertext, secret_key)
 			.map_err(|_| JsError::new("Message decryption failed"))?;
 
 	serde_wasm_bindgen::to_value(&result)
