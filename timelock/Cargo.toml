@@ -1,6 +1,6 @@
 [package]
 name = "timelock"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "timelock encryption imlementation using BF-IBE"
 license = "Apache-2.0"
@@ -37,7 +37,7 @@ chacha20poly1305 = { version = "0.10.1", default-features = false}
 
 rand_core = "0.6.4"
 rand_chacha = { version = "0.3.1", default-features = false }
-w3f-bls = { version = "=0.1.4", default-features = false }
+w3f-bls = { version = "0.1.9", default-features = false }
 
 [dev-dependencies]
 hex = "0.4.3"
