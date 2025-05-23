@@ -22,7 +22,7 @@ use criterion::{
 };
 use rand_core::OsRng;
 use timelock::{
-	ibe::fullident::*, stream_ciphers::AESGCMStreamCipherProvider, tlock::*,
+	ibe::fullident::*, block_ciphers::AESGCMBlockCipherProvider, tlock::*,
 };
 use w3f_bls::{EngineBLS, SecretKey, TinyBLS377};
 
@@ -36,11 +36,11 @@ fn tlock_tinybls377<E: EngineBLS>(
 	id: Identity,
 	sig: IBESecret<E>,
 ) {
-	let ct = tle::<E, AESGCMStreamCipherProvider, OsRng>(
+	let ct = tle::<E, AESGCMBlockCipherProvider, OsRng>(
 		p_pub, msk, &message, id, OsRng,
 	)
 	.unwrap();
-	let _m = tld::<E, AESGCMStreamCipherProvider>(ct, sig.0).unwrap();
+	let _m = tld::<E, AESGCMBlockCipherProvider>(ct, sig.0).unwrap();
 }
 
 /// Benchmarks the `tlock_tinybls377` function using the Criterion benchmarking

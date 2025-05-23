@@ -28,5 +28,5 @@ extern crate alloc;
 
 pub mod curves;
 pub mod ibe;
-pub mod stream_ciphers;
+pub mod block_ciphers;
 pub mod tlock;

@@ -56,7 +56,7 @@ pub enum Error {
 }
 
 /// Something that provides encryption and decryption using a stream cipher
-pub trait StreamCipherProvider<const N: usize> {
+pub trait BlockCipherProvider<const N: usize> {
 	/// Some identifier to indiciate which ciphersuite was used
 	const CIPHER_SUITE: &'static [u8];
 	type Ciphertext: CanonicalDeserialize + CanonicalSerialize;
@@ -76,8 +76,8 @@ pub trait StreamCipherProvider<const N: usize> {
 
 /// This provides the AES_GCM stream cipher, allowing message to be encrypted
 /// and decrypted under AES_GCM
-pub struct AESGCMStreamCipherProvider;
-impl StreamCipherProvider<32> for AESGCMStreamCipherProvider {
+pub struct AESGCMBlockCipherProvider;
+impl BlockCipherProvider<32> for AESGCMBlockCipherProvider {
 	const CIPHER_SUITE: &'static [u8] = b"AES_GCM_";
 
 	type Ciphertext = AESOutput;
@@ -139,9 +139,9 @@ mod test {
 		let msg = b"test";
 		let esk = [2; 32];
 		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMStreamCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
 			Ok(aes_out) => {
-				match AESGCMStreamCipherProvider::decrypt(aes_out, esk) {
+				match AESGCMBlockCipherProvider::decrypt(aes_out, esk) {
 					Ok(plaintext) => {
 						assert_eq!(msg.to_vec(), plaintext);
 					},
@@ -161,13 +161,13 @@ mod test {
 		let msg = b"test";
 		let esk = [2; 32];
 		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMStreamCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,
 					nonce: aes_out.nonce,
 				};
-				match AESGCMStreamCipherProvider::decrypt(bad, [4; 32]) {
+				match AESGCMBlockCipherProvider::decrypt(bad, [4; 32]) {
 					Ok(_) => {
 						panic!("should be an error");
 					},
@@ -187,13 +187,13 @@ mod test {
 		let msg = b"test";
 		let esk = [2; 32];
 		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMStreamCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,
 					nonce: vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				};
-				match AESGCMStreamCipherProvider::decrypt(bad, esk) {
+				match AESGCMBlockCipherProvider::decrypt(bad, esk) {
 					Ok(_) => {
 						panic!("should be an error");
 					},
@@ -213,7 +213,7 @@ mod test {
 		let msg = b"test";
 		let esk = [2; 32];
 		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMStreamCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,
@@ -222,7 +222,7 @@ mod test {
 						0, 0, 0, 0, 0, 0, 0, 0,
 					],
 				};
-				match AESGCMStreamCipherProvider::decrypt(bad, esk) {
+				match AESGCMBlockCipherProvider::decrypt(bad, esk) {
 					Ok(_) => {
 						panic!("should be an error");
 					},

@@ -15,7 +15,7 @@
  */
 use crate::{
 	ibe::fullident::{Ciphertext as IBECiphertext, IBESecret, Identity},
-	stream_ciphers::StreamCipherProvider,
+	block_ciphers::BlockCipherProvider,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
@@ -76,7 +76,7 @@ pub fn tle<E, S, R>(
 ) -> Result<TLECiphertext<E>, Error>
 where
 	E: EngineBLS,
-	S: StreamCipherProvider<32>,
+	S: BlockCipherProvider<32>,
 	R: Rng + CryptoRng,
 {
 	// IBE encryption 'to the future'
@@ -107,7 +107,7 @@ pub fn tld<E, S>(
 ) -> Result<Vec<u8>, Error>
 where
 	E: EngineBLS,
-	S: StreamCipherProvider<32>,
+	S: BlockCipherProvider<32>,
 {
 	// IBE decrypt the secret key
 	let secret_bytes = IBESecret(signature)
@@ -130,7 +130,7 @@ mod test {
 	use super::*;
 	use crate::{
 		curves::drand::TinyBLS381,
-		stream_ciphers::{AESGCMStreamCipherProvider, AESOutput},
+		block_ciphers::{AESGCMBlockCipherProvider, AESOutput},
 	};
 	use alloc::vec;
 	use ark_ec::Group;
@@ -161,7 +161,7 @@ mod test {
 
 		let sig: E::SignatureGroup = id.extract::<E>(sk).0;
 
-		match tle::<E, AESGCMStreamCipherProvider, OsRng>(
+		match tle::<E, AESGCMBlockCipherProvider, OsRng>(
 			p_pub, msk, &message, id, OsRng,
 		) {
 			Ok(mut ct) => {
@@ -186,7 +186,7 @@ mod test {
 					ct.body = corrupted;
 				}
 
-				match tld::<E, AESGCMStreamCipherProvider>(ct, sig) {
+				match tld::<E, AESGCMBlockCipherProvider>(ct, sig) {
 					Ok(output) => {
 						handler(TestStatusReport::DecryptSuccess {
 							actual: output,
@@ -320,14 +320,14 @@ mod test {
 		let identity = Identity::new(b"", vec![message]);
 
 		let rng = ChaCha20Rng::seed_from_u64(0);
-		let ct = tle::<TinyBLS381, AESGCMStreamCipherProvider, ChaCha20Rng>(
+		let ct = tle::<TinyBLS381, AESGCMBlockCipherProvider, ChaCha20Rng>(
 			pub_key, esk, plaintext, identity, rng,
 		)
 		.unwrap();
 
 		// then we can decrypt the ciphertext using the signature
 		let result =
-			tld::<TinyBLS381, AESGCMStreamCipherProvider>(ct, sig).unwrap();
+			tld::<TinyBLS381, AESGCMBlockCipherProvider>(ct, sig).unwrap();
 		assert!(result == plaintext);
 	}
 }

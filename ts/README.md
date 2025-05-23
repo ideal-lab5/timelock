@@ -49,7 +49,7 @@ const timelockBls12_377 = await Timelock.build(SupportedCurve.BLS12_377);
 
 ### Encrypting a Message
 
-Messages can be encrypted for future rounds of a supported beacon's protocol by specifying the be acon public key, round number, and message. Internally the library uses AES-GCM by default (this can be customized by implementing a custom [StreamCipherProvider](https://docs.rs/timelock/0.0.1/timelock/stream_ciphers/trait.StreamCipherProvider.html)).
+Messages can be encrypted for future rounds of a supported beacon's protocol by specifying the beacon public key, round number, and message. Internally the library uses AES-GCM by default (this can be customized by implementing a custom [BlockCipherProvider](https://docs.rs/timelock/0.0.1/timelock/block_ciphers/trait.BlockCipherProvider.html)).
 
 ``` js
 // import a pre-defined IdentityHandler implementation or create your own

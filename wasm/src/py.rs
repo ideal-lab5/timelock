@@ -23,7 +23,7 @@ use sha2::Digest;
 use timelock::{
 	curves::drand::TinyBLS381,
 	ibe::fullident::Identity,
-	stream_ciphers::AESGCMStreamCipherProvider,
+	block_ciphers::AESGCMBlockCipherProvider,
 	tlock::{
 		tld as timelock_decrypt, tle as timelock_encrypt, EngineBLS,
 		TLECiphertext,
@@ -63,7 +63,7 @@ fn tle(
 	let identity = Identity::new(b"", vec![id]);
 
 	let ciphertext =
-		timelock_encrypt::<TinyBLS381, AESGCMStreamCipherProvider, OsRng>(
+		timelock_encrypt::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
 			pp, msk_bytes, &message, identity, OsRng,
 		)
 		.map_err(|_| PyErr::new::<PyValueError, _>("Encryption failed"))?;
@@ -98,7 +98,7 @@ fn tld(ciphertext_bytes: Vec<u8>, sig_bytes: Vec<u8>) -> PyResult<Vec<u8>> {
 				)
 			})?;
 
-	let result = timelock_decrypt::<TinyBLS381, AESGCMStreamCipherProvider>(
+	let result = timelock_decrypt::<TinyBLS381, AESGCMBlockCipherProvider>(
 		ciphertext, sig_point,
 	)
 	.map_err(|e| {

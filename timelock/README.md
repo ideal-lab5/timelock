@@ -8,7 +8,7 @@ This flavor of timelock encryption is a hybrid encryption scheme, using `AES_GCM
 
 ## Usage
 
-The library is flexible and can support various flavors of encryption schemes. Officially, only AES_GCM is supported at the moment, but we will support AGE encryption within the library in the near future. You can implement your own by implementing the `StreamCipherProvider` trait.
+The library is flexible and can support various flavors of encryption schemes. Officially, only AES_GCM is supported at the moment, but we will support AGE encryption within the library in the near future. You can implement your own by implementing the `BlockCipherProvider` trait.
 
 ### Encrypt a Message
 
@@ -25,7 +25,7 @@ let identity = Identity::new(b"", vec![round_number.to_be_bytes()]);
 // generate an ephemeral secret key 32-byte secret key
 let esk = [2;32];
 // encrypt using the identity
-let ct = tle::<TinyBLS377, AESGCMStreamCipherProvider, OsRng>::(p_pub, msk, &message, id, OsRng).unwrap();
+let ct = tle::<TinyBLS377, AESGCMBlockCipherProvider, OsRng>::(p_pub, msk, &message, id, OsRng).unwrap();
 ```
 
 ### Decrypt a Message
@@ -34,7 +34,7 @@ let ct = tle::<TinyBLS377, AESGCMStreamCipherProvider, OsRng>::(p_pub, msk, &mes
 Message can be encrypted at any time using the ephemeral secret key used to encrypt it, along with the same encryption scheme:
 ``` rust
 // use the same esk as in `encrypt`
-let early_result = AESGCMStreamCipherProvider::decrypt(ct, esk).unwrap();
+let early_result = AESGCMBlockCipherProvider::decrypt(ct, esk).unwrap();
 ```
 
 #### Timelock Decryption
@@ -42,7 +42,7 @@ Messages can also be decrypted with a signature produced by a beacon on top of t
 ``` rust
 // first get a valid siganture from the beacon
 let signature =	hex::decode(b"f8178b1c3c9477f7b0e37cd3e63ff3a184e1d05df3117438cd05e109b5731a52a96ae344e461bc6cb8e04f5efed34701").expect("decoding failure");
-let result: DecryptionResult = tld::<TinyBLS381, AESGCMStreamCipherProvider>(ct, sig).unwrap();
+let result: DecryptionResult = tld::<TinyBLS381, AESGCMBlockCipherProvider>(ct, sig).unwrap();
 ```
 
 ## Build
