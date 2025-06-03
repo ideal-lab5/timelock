@@ -22,7 +22,7 @@ let p_pub = <TinyBLS377 as EngineBLS>::deserialize_compressed(&*pk).unwrap();
 // choose a future round number of the randomness beacon
 let round_number: u64 = 10;
 let identity = Identity::new(b"", vec![round_number.to_be_bytes()]);
-// generate an ephemeral secret key 32-byte secret key
+// generate an ephemeral secret key 32-byte secret keyff
 let esk = [2;32];
 // encrypt using the identity
 let ct = tle::<TinyBLS377, AESGCMBlockCipherProvider, OsRng>::(p_pub, msk, &message, id, OsRng).unwrap();

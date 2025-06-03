@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 use crate::{
-	ibe::fullident::{Ciphertext as IBECiphertext, IBESecret, Identity},
 	block_ciphers::BlockCipherProvider,
+	ibe::fullident::{Ciphertext as IBECiphertext, IBESecret, Identity},
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
@@ -81,7 +81,7 @@ where
 {
 	// IBE encryption 'to the future'
 	let header: IBECiphertext<E> = id.encrypt(&secret_key, p_pub, &mut rng);
-	// encrypt arbitrary-length messages with a stream cipher
+	// encrypt arbitrary-length messages with a block cipher
 	let body = S::encrypt(message, secret_key, &mut rng)
 		.map_err(|_| Error::MessageEncryptionError)?;
 	let mut message_bytes = Vec::new();
@@ -129,8 +129,8 @@ mod test {
 
 	use super::*;
 	use crate::{
-		curves::drand::TinyBLS381,
 		block_ciphers::{AESGCMBlockCipherProvider, AESOutput},
+		curves::drand::TinyBLS381,
 	};
 	use alloc::vec;
 	use ark_ec::Group;
