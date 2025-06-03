@@ -16,13 +16,13 @@
 
 import { expect, describe, test } from '@jest/globals'
 import { Result, SupportedCurve, Timelock, u8a } from './timelock'
-import { IdealNetworkIdentityBuilder } from './interfaces/IDNIdentityBuilder'
 import init, {
   build_encoded_commitment,
   tle,
   tld,
   decrypt,
-} from 'timelock-wasm-wrapper'
+} from '@ideallabs/timelock_wasm_wrapper'
+import { DrandIdentityBuilder } from '../dist'
 
 jest.mock('timelock-wasm-wrapper')
 
@@ -52,7 +52,7 @@ describe('Timelock Encryption', () => {
     const result = await instance.encrypt(
       encodedMessage,
       42,
-      IdealNetworkIdentityBuilder,
+      DrandIdentityBuilder,
       beaconPublicKeyHex,
       ephemeralSecretKeyHex,
     )

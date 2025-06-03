@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "type": "module",
   "dependencies": {
-    "@ideallabs/timelock_wasm_wrapper": "1.0.0"
+    "@ideallabs/timelock_wasm_wrapper": "file:../wasm/pkg/js"
   },
   "scripts": {
     "build:wasm": "cd ../wasm && ./wasm_build.sh",

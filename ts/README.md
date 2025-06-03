@@ -79,7 +79,7 @@ const roundNumber = 10
 let ct = await timelockIdeal.encrypt(
   encodedMessage,
   roundNumber,
-  IdealNetworkIdentityBuilder,
+  DrandIdentityBuilder,
   pubkey,
   key
 )
