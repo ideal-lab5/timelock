@@ -21,7 +21,8 @@ import init, {
   tld,
   decrypt,
 } from '@ideallabs/timelock_wasm_wrapper'
-import { DrandIdentityBuilder } from '../dist'
+import { DrandIdentityBuilder } from './interfaces/DrandIdentityBuilder'
+// import { DrandIdentityBuilder } from '../dist'
 
 jest.mock('timelock-wasm-wrapper')
 
@@ -50,15 +51,16 @@ describe('Timelock Encryption', () => {
 
     const result = await instance.encrypt(
       encodedMessage,
-      42,
+      0,
       DrandIdentityBuilder,
       beaconPublicKeyHex,
       ephemeralSecretKeyHex,
     )
 
+    const expectedId = await DrandIdentityBuilder.build(0);
     expect(result).toStrictEqual(expectedResult)
     expect(tle).toHaveBeenCalledWith(
-      0,
+      expectedId,
       encodedMessage,
       ephemeralSecretKey,
       beaconPublicKey,
