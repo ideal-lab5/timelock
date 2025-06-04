@@ -53,19 +53,14 @@ serde_json = { version = "1.0.108", default-features = false, features = [
     "alloc",
 ] }
 serde_cbor = { version = "0.11.2", default-features = false }
-chacha20poly1305 = { version = "0.10.1", default-features = false }
 
 rand_core = { version = "0.9.3", default-features = false, features = [
     "os_rng",
 ] }
-rand_chacha = { version = "0.3.1", default-features = false }
 rand = { version = "0.9.1", default-features = false }
 
 [dev-dependencies]
 hex = "0.4.3"
-ark-ed-on-bls12-381 = { version = "^0.4.0", default-features = false, features = [
-    "r1cs",
-] }
 simulacrum = "0.3.0"
 criterion = { version = "0.4", features = ["html_reports"] }
 
@@ -88,7 +83,5 @@ std = [
     "ark-bls12-381/std",
     "serde_json/std",
     "serde_cbor/std",
-    "rand_chacha/std",
     "rand/std",
-    "chacha20poly1305/std",
 ]

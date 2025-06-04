@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,13 +96,13 @@ impl Identity {
 		R: Rng + Sized,
 	{
 		let t = E::Scalar::rand(&mut rng);
-		let mut t_bytes = Vec::new();
+		let mut t_bytes = Vec::with_capacity(t.compressed_size());
 		t.serialize_compressed(&mut t_bytes)
 			.expect("compressed size has been allocated");
 		let sigma = h4(&t_bytes);
 		// r= H3(sigma, message)
 		let r: E::Scalar = h3::<E>(&sigma, message);
-		let p = <<E as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator();
+		let p = E::PublicKeyGroup::generator();
 		// U = rP \in \mathbb{G}_1
 		let u = p * r;
 		// e(P_pub, Q_id)
@@ -143,7 +143,7 @@ impl<E: EngineBLS> IBESecret<E> {
 		let m_rhs = h4(&sigma);
 		let m = cross_product_32(&ciphertext.w, &m_rhs);
 		// check: U == rP
-		let p = <<E as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator();
+		let p = E::PublicKeyGroup::generator();
 		let r = h3::<E>(&sigma, &m);
 		let u_check = p * r;
 
@@ -157,7 +157,6 @@ impl<E: EngineBLS> IBESecret<E> {
 
 #[cfg(test)]
 mod test {
-
 	use super::*;
 	use alloc::vec;
 	use ark_std::{test_rng, UniformRand};

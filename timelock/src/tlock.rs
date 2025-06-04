@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,8 +134,6 @@ mod test {
 	use alloc::vec;
 	use ark_ec::PrimeGroup;
 	use ark_ff::UniformRand;
-	use rand_chacha::ChaCha20Rng;
-	use rand_core::{SeedableRng};
 	use ark_std::rand::rngs::OsRng;
 	use sha2::Digest;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,16 +130,14 @@ impl BlockCipherProvider<32> for AESGCMBlockCipherProvider {
 #[cfg(test)]
 mod test {
 	use super::*;
-	use alloc::vec;
-	use ark_std::rand::SeedableRng;
-	use rand_chacha::ChaCha20Rng;
+	use alloc::vec;	
+	use ark_std::rand::rngs::OsRng;
 
 	#[test]
 	pub fn aes_encrypt_decrypt_works() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
 			Ok(aes_out) => {
 				match AESGCMBlockCipherProvider::decrypt(aes_out, esk) {
 					Ok(plaintext) => {
@@ -160,8 +158,7 @@ mod test {
 	pub fn aes_encrypt_decrypt_fails_with_bad_key() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,
@@ -186,8 +183,7 @@ mod test {
 	pub fn aes_encrypt_decrypt_fails_with_invalid_nonce() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,
@@ -212,8 +208,7 @@ mod test {
 	pub fn aes_encrypt_decrypt_fails_with_bad_length_nonce() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,

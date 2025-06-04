@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,11 +56,8 @@ impl Message {
 		let l = message.len() as u64;
 		h.update(&l.to_le_bytes());
 		h.update(message);
-		// let mut t = ::merlin::Transcript::new(context);
-		// t.append_message(b"", message);
 		let mut msg = [0u8; MESSAGE_SIZE];
 		h.finalize_xof().read(&mut msg[..]);
-		// t.challenge_bytes(b"", &mut msg);
 		Message(msg, [context, message].concat())
 	}
 
