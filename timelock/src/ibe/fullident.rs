@@ -15,13 +15,15 @@
  */
 
 use super::utils::{cross_product_32, h2, h3, h4};
-use ark_ec::Group;
+use ark_ec::PrimeGroup;
 use ark_ff::{UniformRand, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::Mul, rand::Rng, vec::Vec};
 use serde::{Deserialize, Serialize};
 
-use w3f_bls::{EngineBLS, Message};
+use crate::Message;
+
+use crate::engines::EngineBLS;
 
 /// Represents a ciphertext in the BF-IBE FullIdent scheme
 #[derive(
@@ -100,7 +102,7 @@ impl Identity {
 		let sigma = h4(&t_bytes);
 		// r= H3(sigma, message)
 		let r: E::Scalar = h3::<E>(&sigma, message);
-		let p = <<E as EngineBLS>::PublicKeyGroup as Group>::generator();
+		let p = <<E as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator();
 		// U = rP \in \mathbb{G}_1
 		let u = p * r;
 		// e(P_pub, Q_id)
@@ -141,7 +143,7 @@ impl<E: EngineBLS> IBESecret<E> {
 		let m_rhs = h4(&sigma);
 		let m = cross_product_32(&ciphertext.w, &m_rhs);
 		// check: U == rP
-		let p = <<E as EngineBLS>::PublicKeyGroup as Group>::generator();
+		let p = <<E as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator();
 		let r = h3::<E>(&sigma, &m);
 		let u_check = p * r;
 
@@ -159,7 +161,8 @@ mod test {
 	use super::*;
 	use alloc::vec;
 	use ark_std::{test_rng, UniformRand};
-	use w3f_bls::TinyBLS377;
+	// use w3f_bls::TinyBLS377;
+	use crate::engines::drand::TinyBLS381 as TinyBLS377;
 
 	// this enum represents the conditions or branches that I want to test
 	enum TestStatusReport {

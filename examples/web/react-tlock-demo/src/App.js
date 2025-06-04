@@ -70,7 +70,7 @@ function App() {
     // Decrypt the ciphertext with the signature
     const plaintext = await timelockDrand.decrypt(ct, sigHex)
     // console.log(plaintext)
-    console.log(`Recovered ${plaintext}, Expected ${message}`)
+    console.log(`Recovered ${String.fromCharCode(...plaintext)}, Expected ${message}`)
   }
 
   return (

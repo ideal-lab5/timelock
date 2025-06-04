@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+use crate::engines::{drand::TinyBLS381, EngineBLS};
 use ark_ec::Group;
 use ark_ff::UniformRand;
 use criterion::{
@@ -22,14 +23,13 @@ use criterion::{
 };
 use rand_core::OsRng;
 use timelock::{
-	ibe::fullident::*, block_ciphers::AESGCMBlockCipherProvider, tlock::*,
+	block_ciphers::AESGCMBlockCipherProvider, ibe::fullident::*, tlock::*,
 };
-use w3f_bls::{EngineBLS, SecretKey, TinyBLS377};
 
 /// Encrypts a message for the identity and then decrypts it after preparing a
 /// bls sig. It expects on a single signature but tests many different input
 /// data sizes.
-fn tlock_tinybls377<E: EngineBLS>(
+fn tlock_tinybls381<E: EngineBLS>(
 	msk: [u8; 32],
 	p_pub: E::PublicKeyGroup,
 	message: Vec<u8>,
@@ -43,7 +43,7 @@ fn tlock_tinybls377<E: EngineBLS>(
 	let _m = tld::<E, AESGCMBlockCipherProvider>(ct, sig.0).unwrap();
 }
 
-/// Benchmarks the `tlock_tinybls377` function using the Criterion benchmarking
+/// Benchmarks the `tlock_tinybls381` function using the Criterion benchmarking
 /// library.
 ///
 /// This function sets up a series of benchmarks to measure the performance of
@@ -52,10 +52,10 @@ fn tlock_tinybls377<E: EngineBLS>(
 fn tlock(c: &mut Criterion) {
 	static KB: usize = 1024;
 
-	let s = <TinyBLS377 as EngineBLS>::Scalar::rand(&mut OsRng);
-	let p_pub = <TinyBLS377 as EngineBLS>::PublicKeyGroup::generator() * s;
+	let s = <TinyBLS381 as EngineBLS>::Scalar::rand(&mut OsRng);
+	let p_pub = <TinyBLS381 as EngineBLS>::PublicKeyGroup::generator() * s;
 	let id = Identity::new(b"", vec![b"test".to_vec()]);
-	let msk = <TinyBLS377 as EngineBLS>::Scalar::rand(&mut OsRng);
+	let msk = <TinyBLS381 as EngineBLS>::Scalar::rand(&mut OsRng);
 
 	let mut group = c.benchmark_group("tlock");
 	for size in [KB, 2 * KB, 4 * KB, 8 * KB, 16 * KB, 128 * KB, 256 * KB].iter()
@@ -69,7 +69,7 @@ fn tlock(c: &mut Criterion) {
 			size,
 			|b, &size| {
 				b.iter(|| {
-					tlock_tinybls377::<TinyBLS377>(
+					tlock_tinybls381::<TinyBLS381>(
 						black_box([2; 32]),
 						black_box(p_pub),
 						black_box(dummy_data.clone()),

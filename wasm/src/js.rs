@@ -28,7 +28,7 @@ use timelock::{
 	tlock::{tld as timelock_decrypt, tle as timelock_encrypt, TLECiphertext},
 };
 
-use w3f_bls::{EngineBLS, TinyBLS377};
+use crate::engines::{drand::TinyBLS381, EngineBLS};
 use wasm_bindgen::prelude::*;
 
 /// a helper function to deserialize arkworks elements from bytes
@@ -42,7 +42,6 @@ fn convert_from_bytes<E: CanonicalDeserialize, const N: usize>(
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SupportedCurve {
-    Bls12_377,
     Bls12_381,
 }
 
@@ -66,7 +65,6 @@ pub fn tle(
 		.map_err(|_| JsError::new("could not decode the curve type"))?;
 
 	match curve {
-		SupportedCurve::Bls12_377 => do_tle::<TinyBLS377>(id_js, message_js, sk_js, p_pub_js),
 		SupportedCurve::Bls12_381 => do_tle::<TinyBLS381>(id_js, message_js, sk_js, p_pub_js),
 	}
 }
@@ -130,7 +128,6 @@ pub fn tld(
 		.map_err(|_| JsError::new("could not decode the curve type"))?;
 
 	match curve {
-        SupportedCurve::Bls12_377 => do_tld::<TinyBLS377>(ciphertext_js, sig_vec_js),
         SupportedCurve::Bls12_381 => do_tld::<TinyBLS381>(ciphertext_js, sig_vec_js),
     }
 }
@@ -173,7 +170,6 @@ pub fn decrypt(
 		.map_err(|_| JsError::new("could not decode the curve type"))?;
 
 	match curve {
-		SupportedCurve::Bls12_377 => do_decrypt::<TinyBLS377>(ciphertext_js, sk_vec_js),
 		SupportedCurve::Bls12_381 => do_decrypt::<TinyBLS381>(ciphertext_js, sk_vec_js),
 	}
 }
@@ -251,9 +247,7 @@ mod test {
 	use rand_chacha::ChaCha20Rng;
 	use rand_core::SeedableRng;
 	use sha2::Digest;
-	use w3f_bls::{
-		DoublePublicKey, DoublePublicKeyScheme, EngineBLS, TinyBLS377,
-	};
+	// use crate::engines::Engine;
 	use wasm_bindgen_test::*;
 
 	enum TestStatusReport {
@@ -386,11 +380,6 @@ mod test {
 				},
 			}
 		}
-	}
-
-	#[wasm_bindgen_test]
-	pub fn can_encrypt_decrypt_ideal() {
-		can_encrypt_decrypt::<TinyBLS377>("ideal");
 	}
 
 	#[wasm_bindgen_test]

@@ -29,9 +29,9 @@ use ark_ff::field_hashers::DefaultFieldHasher;
 
 use sha2::Sha256; //IETF standard asks for SHA256
 
+use crate::engines::EngineBLS;
 use ark_ec::bls12::Bls12Config;
 use core::marker::PhantomData;
-use w3f_bls::EngineBLS;
 
 pub const QUICKNET_CTX: &[u8] = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_";
 

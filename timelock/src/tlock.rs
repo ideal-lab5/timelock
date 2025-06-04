@@ -15,6 +15,7 @@
  */
 use crate::{
 	block_ciphers::BlockCipherProvider,
+	engines::EngineBLS,
 	ibe::fullident::{Ciphertext as IBECiphertext, IBESecret, Identity},
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -23,8 +24,6 @@ use ark_std::{
 	rand::{CryptoRng, Rng},
 	vec::Vec,
 };
-
-pub use w3f_bls::EngineBLS;
 
 /// A secret key used for encryption/decryption
 pub type OpaqueSecretKey = [u8; 32];
@@ -130,7 +129,7 @@ mod test {
 	use super::*;
 	use crate::{
 		block_ciphers::{AESGCMBlockCipherProvider, AESOutput},
-		curves::drand::TinyBLS381,
+		engine::drand::TinyBLS381,
 	};
 	use alloc::vec;
 	use ark_ec::Group;
@@ -138,7 +137,6 @@ mod test {
 	use rand_chacha::ChaCha20Rng;
 	use rand_core::{OsRng, SeedableRng};
 	use sha2::Digest;
-	use w3f_bls::TinyBLS377;
 
 	// specific conditions that we want to test/verify
 	enum TestStatusReport {
@@ -208,7 +206,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_single_sig() {
-		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
 			false,
 			false,
 			&|status: TestStatusReport| match status {
@@ -222,7 +220,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_full_sigs_present() {
-		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
 			false,
 			false,
 			&|status: TestStatusReport| match status {
@@ -236,7 +234,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_many_identities_at_threshold() {
-		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
 			false,
 			false,
 			&|status: TestStatusReport| match status {
@@ -250,7 +248,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_decryption_fails_with_bad_ciphertext() {
-		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
 			true,
 			false,
 			&|status: TestStatusReport| match status {
@@ -264,7 +262,7 @@ mod test {
 
 	#[test]
 	pub fn tlock_decryption_fails_with_bad_nonce() {
-		tlock_test_aes_gcm::<TinyBLS377, OsRng>(
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
 			false,
 			true,
 			&|status: TestStatusReport| match status {

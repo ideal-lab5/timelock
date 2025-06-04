@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+use crate::engines::EngineBLS;
 use alloc::borrow::ToOwned;
 use ark_ff::PrimeField;
 use ark_serialize::CanonicalSerialize;
 use ark_std::vec::Vec;
 use sha2::Digest;
-use w3f_bls::EngineBLS;
 
 /// sha256 hasher
 pub fn sha256(b: &[u8]) -> Vec<u8> {
