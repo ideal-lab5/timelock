@@ -15,13 +15,7 @@
  */
 
 #![no_std]
-#![warn(
-	unused,
-	future_incompatible,
-	nonstandard_style,
-	rust_2018_idioms,
-	rust_2021_compatibility
-)]
+#![warn(unused, future_incompatible, nonstandard_style, rust_2018_idioms, rust_2021_compatibility)]
 #![deny(unsafe_code)]
 
 extern crate alloc;
@@ -48,8 +42,8 @@ pub struct Message(pub MessageDigest, pub alloc::vec::Vec<u8>);
 impl Message {
 	pub fn new(context: &[u8], message: &[u8]) -> Message {
 		use sha3::{
-			digest::{ExtendableOutput, Update, XofReader},
 			Shake128,
+			digest::{ExtendableOutput, Update, XofReader},
 		};
 		let mut h = Shake128::default();
 		h.update(context);

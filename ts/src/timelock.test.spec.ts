@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 import { expect, describe, test } from '@jest/globals'
 import { Result, SupportedCurve, Timelock, u8a } from './timelock'
 import init, {
-  build_encoded_commitment,
   tle,
   tld,
   decrypt,
@@ -58,7 +57,6 @@ describe('Timelock Encryption', () => {
     )
 
     expect(result).toStrictEqual(expectedResult)
-    expect(build_encoded_commitment).toHaveBeenCalledWith(42, 0)
     expect(tle).toHaveBeenCalledWith(
       0,
       encodedMessage,

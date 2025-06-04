@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,10 @@ use pyo3::{exceptions::PyValueError, prelude::*, wrap_pyfunction};
 use rand_core::OsRng;
 use sha2::Digest;
 use timelock::{
+	block_ciphers::AESGCMBlockCipherProvider,
 	curves::drand::TinyBLS381,
 	ibe::fullident::Identity,
-	block_ciphers::AESGCMBlockCipherProvider,
-	tlock::{
-		tld as timelock_decrypt, tle as timelock_encrypt, EngineBLS,
-		TLECiphertext,
-	},
+	tlock::{EngineBLS, TLECiphertext, tld as timelock_decrypt, tle as timelock_encrypt},
 };
 
 /// The encrypt wrapper used by the Python bindings to call tlock.rs encrypt
@@ -43,18 +40,16 @@ fn tle(
 	sk_py: Vec<u8>,
 	p_pub_py: Vec<u8>,
 ) -> PyResult<Vec<u8>> {
-	let msk_bytes: [u8; 32] = sk_py.try_into().map_err(|_| {
-		PyErr::new::<PyValueError, _>("Could not convert secret key")
-	})?;
+	let msk_bytes: [u8; 32] = sk_py
+		.try_into()
+		.map_err(|_| PyErr::new::<PyValueError, _>("Could not convert secret key"))?;
 
-	let pp = <TinyBLS381 as EngineBLS>::PublicKeyGroup::deserialize_compressed(
-		&p_pub_py[..],
-	)
-	.map_err(|_| {
-		PyErr::new::<PyValueError, _>(
-		"The public key bytes could not be deserialized to a valid public key."
-	)
-	})?;
+	let pp = <TinyBLS381 as EngineBLS>::PublicKeyGroup::deserialize_compressed(&p_pub_py[..])
+		.map_err(|_| {
+			PyErr::new::<PyValueError, _>(
+				"The public key bytes could not be deserialized to a valid public key.",
+			)
+		})?;
 	let id = {
 		let mut hasher = sha2::Sha256::new();
 		hasher.update(round_number.to_be_bytes());
@@ -62,16 +57,15 @@ fn tle(
 	};
 	let identity = Identity::new(b"", vec![id]);
 
-	let ciphertext =
-		timelock_encrypt::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
-			pp, msk_bytes, &message, identity, OsRng,
-		)
-		.map_err(|_| PyErr::new::<PyValueError, _>("Encryption failed"))?;
+	let ciphertext = timelock_encrypt::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
+		pp, msk_bytes, &message, identity, OsRng,
+	)
+	.map_err(|_| PyErr::new::<PyValueError, _>("Encryption failed"))?;
 
 	let mut ciphertext_bytes: Vec<u8> = Vec::new();
-	ciphertext.serialize_compressed(&mut ciphertext_bytes).map_err(|_| {
-		PyErr::new::<PyValueError, _>("Ciphertext serialization failed")
-	})?;
+	ciphertext
+		.serialize_compressed(&mut ciphertext_bytes)
+		.map_err(|_| PyErr::new::<PyValueError, _>("Ciphertext serialization failed"))?;
 
 	Ok(ciphertext_bytes)
 }
@@ -83,27 +77,16 @@ fn tle(
 #[pyfunction]
 fn tld(ciphertext_bytes: Vec<u8>, sig_bytes: Vec<u8>) -> PyResult<Vec<u8>> {
 	let sig_point =
-		<TinyBLS381 as EngineBLS>::SignatureGroup::deserialize_compressed(
-			sig_bytes.as_slice(),
-		)
-		.map_err(|_| {
-			PyErr::new::<PyValueError, _>("Could not deserialize signature")
-		})?;
+		<TinyBLS381 as EngineBLS>::SignatureGroup::deserialize_compressed(sig_bytes.as_slice())
+			.map_err(|_| PyErr::new::<PyValueError, _>("Could not deserialize signature"))?;
 
 	let ciphertext: TLECiphertext<TinyBLS381> =
 		TLECiphertext::deserialize_compressed(ciphertext_bytes.as_slice())
-			.map_err(|_| {
-				PyErr::new::<PyValueError, _>(
-					"Could not deserialize ciphertext",
-				)
-			})?;
+			.map_err(|_| PyErr::new::<PyValueError, _>("Could not deserialize ciphertext"))?;
 
-	let result = timelock_decrypt::<TinyBLS381, AESGCMBlockCipherProvider>(
-		ciphertext, sig_point,
-	)
-	.map_err(|e| {
-		PyErr::new::<PyValueError, _>(format!("Decryption failed: {:?}", e))
-	})?;
+	let result =
+		timelock_decrypt::<TinyBLS381, AESGCMBlockCipherProvider>(ciphertext, sig_point)
+			.map_err(|e| PyErr::new::<PyValueError, _>(format!("Decryption failed: {:?}", e)))?;
 
 	Ok(result)
 }

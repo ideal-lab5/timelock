@@ -27,13 +27,7 @@ use crate::engines::EngineBLS;
 
 /// Represents a ciphertext in the BF-IBE FullIdent scheme
 #[derive(
-	Debug,
-	Clone,
-	PartialEq,
-	CanonicalDeserialize,
-	CanonicalSerialize,
-	Serialize,
-	Deserialize,
+	Debug, Clone, PartialEq, CanonicalDeserialize, CanonicalSerialize, Serialize, Deserialize,
 )]
 pub struct Ciphertext<E: EngineBLS> {
 	/// U = rP
@@ -119,23 +113,13 @@ impl Identity {
 }
 
 /// The output of the IBE extract algorithm is a BLS signature
-#[derive(
-	Debug,
-	Clone,
-	CanonicalDeserialize,
-	CanonicalSerialize,
-	Serialize,
-	Deserialize,
-)]
+#[derive(Debug, Clone, CanonicalDeserialize, CanonicalSerialize, Serialize, Deserialize)]
 pub struct IBESecret<E: EngineBLS>(pub E::SignatureGroup);
 
 impl<E: EngineBLS> IBESecret<E> {
 	/// BF-IBE decryption of a ciphertext C = <U, V, W>  
 	/// Attempts to decrypt under the given IBESecret (in G1)
-	pub fn decrypt(
-		&self,
-		ciphertext: &Ciphertext<E>,
-	) -> Result<Vec<u8>, IbeError> {
+	pub fn decrypt(&self, ciphertext: &Ciphertext<E>) -> Result<Vec<u8>, IbeError> {
 		// sigma = V (+) H2(e(d_id, U))
 		let sigma_rhs = h2(E::pairing(ciphertext.u, self.0));
 		let sigma = cross_product_32(&ciphertext.v, &sigma_rhs);
@@ -158,9 +142,9 @@ impl<E: EngineBLS> IBESecret<E> {
 #[cfg(test)]
 mod test {
 	use super::*;
-	use alloc::vec;
-	use ark_std::{test_rng, UniformRand};
 	use crate::engines::drand::TinyBLS381;
+	use alloc::vec;
+	use ark_std::{UniformRand, test_rng};
 
 	// this enum represents the conditions or branches that I want to test
 	enum TestStatusReport {
@@ -188,14 +172,9 @@ mod test {
 	) {
 		let (msk, sk) = extract::<EB>(identity.clone(), derive_bad_sk);
 
-		let p_pub =
-			<<EB as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator() * msk;
+		let p_pub = <<EB as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator() * msk;
 
-		let mut ct = Ciphertext {
-			u: EB::PublicKeyGroup::generator(),
-			v: vec![],
-			w: vec![],
-		};
+		let mut ct = Ciphertext { u: EB::PublicKeyGroup::generator(), v: vec![], w: vec![] };
 
 		if !insert_bad_ciphertext {
 			ct = identity.encrypt(&message, p_pub, &mut test_rng());
@@ -203,10 +182,7 @@ mod test {
 
 		match sk.decrypt(&ct) {
 			Ok(data) => {
-				handler(TestStatusReport::DecryptionResult {
-					data,
-					verify: message.to_vec(),
-				});
+				handler(TestStatusReport::DecryptionResult { data, verify: message.to_vec() });
 			},
 			Err(e) => {
 				handler(TestStatusReport::DecryptionFailure { error: e });
@@ -214,10 +190,7 @@ mod test {
 		}
 	}
 
-	fn extract<E: EngineBLS>(
-		identity: Identity,
-		derive_bad_sk: bool,
-	) -> (E::Scalar, IBESecret<E>) {
+	fn extract<E: EngineBLS>(identity: Identity, derive_bad_sk: bool) -> (E::Scalar, IBESecret<E>) {
 		let msk = <E as EngineBLS>::Scalar::rand(&mut test_rng());
 		if derive_bad_sk {
 			return (msk, IBESecret(E::SignatureGroup::generator()));
@@ -242,18 +215,14 @@ mod test {
 		let identity = Identity::new(b"", vec![id_string.to_vec()]);
 		let message: [u8; 32] = [2; 32];
 
-		run_test::<TinyBLS381>(
-			identity,
-			message,
-			false,
-			false,
-			&|status: TestStatusReport| match status {
+		run_test::<TinyBLS381>(identity, message, false, false, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptionResult { data, verify } => {
 					assert_eq!(data, verify);
 				},
 				_ => panic!("Decryption should work"),
-			},
-		);
+			}
+		});
 	}
 
 	#[test]
@@ -262,18 +231,14 @@ mod test {
 		let identity = Identity::new(b"", vec![id_string.to_vec()]);
 		let message: [u8; 32] = [2; 32];
 
-		run_test::<TinyBLS381>(
-			identity,
-			message,
-			false,
-			true,
-			&|status: TestStatusReport| match status {
+		run_test::<TinyBLS381>(identity, message, false, true, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptionFailure { error } => {
 					assert_eq!(error, IbeError::DecryptionFailed);
 				},
 				_ => panic!("all other conditions invalid"),
-			},
-		);
+			}
+		});
 	}
 
 	#[test]
@@ -282,17 +247,13 @@ mod test {
 		let identity = Identity::new(b"", vec![id_string.to_vec()]);
 		let message: [u8; 32] = [2; 32];
 
-		run_test::<TinyBLS381>(
-			identity,
-			message,
-			true,
-			false,
-			&|status: TestStatusReport| match status {
+		run_test::<TinyBLS381>(identity, message, true, false, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptionFailure { error } => {
 					assert_eq!(error, IbeError::DecryptionFailed);
 				},
 				_ => panic!("all other conditions invalid"),
-			},
-		);
+			}
+		});
 	}
 }

@@ -21,17 +21,17 @@ use core::{borrow::Borrow, ops::MulAssign};
 
 use alloc::{vec, vec::Vec};
 use ark_ec::{
+	AffineRepr, CurveGroup,
 	hashing::{
-		map_to_curve_hasher::{MapToCurve, MapToCurveBasedHasher},
 		HashToCurve,
+		map_to_curve_hasher::{MapToCurve, MapToCurveBasedHasher},
 	},
 	pairing::{MillerLoopOutput, Pairing, PairingOutput},
-	AffineRepr, CurveGroup,
 };
-use ark_ff::{field_hashers::HashToField, Field, PrimeField, UniformRand};
+use ark_ff::{Field, PrimeField, UniformRand, field_hashers::HashToField};
 use ark_serialize::CanonicalSerialize;
-use rand::Rng;
 use ark_std::rand::RngCore;
+use rand::Rng;
 
 use core::fmt::Debug;
 
@@ -79,12 +79,7 @@ pub trait EngineBLS {
 		+ Into<Self::PublicKeyGroupAffine>
 		+ MulAssign<Self::Scalar>;
 
-	type PublicKeyPrepared: Default
-		+ Clone
-		+ Send
-		+ Sync
-		+ Debug
-		+ From<Self::PublicKeyGroupAffine>;
+	type PublicKeyPrepared: Default + Clone + Send + Sync + Debug + From<Self::PublicKeyGroupAffine>;
 
 	const PUBLICKEY_SERIALIZED_SIZE: usize;
 	const SECRET_KEY_SIZE: usize;
@@ -114,12 +109,7 @@ pub trait EngineBLS {
 		+ From<Self::SignatureGroupAffine>
 		+ MulAssign<Self::Scalar>;
 
-	type SignaturePrepared: Default
-		+ Clone
-		+ Send
-		+ Sync
-		+ Debug
-		+ From<Self::SignatureGroupAffine>;
+	type SignaturePrepared: Default + Clone + Send + Sync + Debug + From<Self::SignatureGroupAffine>;
 
 	const SIGNATURE_SERIALIZED_SIZE: usize;
 
@@ -139,9 +129,7 @@ pub trait EngineBLS {
 	>;
 
 	/// Hash one message to the signature curve.
-	fn hash_to_signature_curve<M: Borrow<[u8]>>(
-		message: M,
-	) -> Self::SignatureGroup {
+	fn hash_to_signature_curve<M: Borrow<[u8]>>(message: M) -> Self::SignatureGroup {
 		Self::hash_to_curve_map().hash(message.borrow()).unwrap().into_group()
 	}
 
@@ -152,10 +140,7 @@ pub trait EngineBLS {
 		Self::PublicKeyPrepared: 'a,
 		Self::SignaturePrepared: 'a,
 		I: IntoIterator<
-			Item = &'a (
-				<Self as EngineBLS>::PublicKeyPrepared,
-				Self::SignaturePrepared,
-			),
+			Item = &'a (<Self as EngineBLS>::PublicKeyPrepared, Self::SignaturePrepared),
 		>;
 
 	/// Perform final exponentiation on the result of a Miller loop.
@@ -191,9 +176,7 @@ pub trait EngineBLS {
 	/// implemented by the type of BLS system implementing the engine
 	/// by calling either prepare_g1 or prepare_g2 based on which group
 	/// is used by the signature system to host the public key
-	fn prepare_public_key(
-		g: impl Into<Self::PublicKeyGroupAffine>,
-	) -> Self::PublicKeyPrepared {
+	fn prepare_public_key(g: impl Into<Self::PublicKeyGroupAffine>) -> Self::PublicKeyPrepared {
 		let g_affine: Self::PublicKeyGroupAffine = g.into();
 		Self::PublicKeyPrepared::from(g_affine)
 	}
@@ -202,9 +185,7 @@ pub trait EngineBLS {
 	/// implemented by the type of BLS system implementing the engine
 	/// by calling either prepare_g1 or prepare_g2 based on which group
 	/// is used by the signature system to host the public key
-	fn prepare_signature(
-		g: impl Into<Self::SignatureGroupAffine>,
-	) -> Self::SignaturePrepared {
+	fn prepare_signature(g: impl Into<Self::SignatureGroupAffine>) -> Self::SignaturePrepared {
 		let g_affine: Self::SignatureGroupAffine = g.into();
 		Self::SignaturePrepared::from(g_affine)
 	}

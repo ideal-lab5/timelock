@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,9 @@
  */
 
 const init = jest.fn().mockResolvedValue(undefined)
-const build_encoded_commitment = jest.fn().mockReturnValue(0)
 const tle = jest.fn().mockReturnValue(1)
 const tld = jest.fn().mockReturnValue(2)
 const decrypt = jest.fn().mockReturnValue(3)
 
 export default init
-export { build_encoded_commitment, tle, tld, decrypt }
+export { tle, tld, decrypt }

@@ -81,17 +81,13 @@ where
 	// IBE encryption 'to the future'
 	let header: IBECiphertext<E> = id.encrypt(&secret_key, p_pub, &mut rng);
 	// encrypt arbitrary-length messages with a block cipher
-	let body = S::encrypt(message, secret_key, &mut rng)
-		.map_err(|_| Error::MessageEncryptionError)?;
+	let body =
+		S::encrypt(message, secret_key, &mut rng).map_err(|_| Error::MessageEncryptionError)?;
 	let mut message_bytes = Vec::new();
 	body.serialize_compressed(&mut message_bytes)
 		.expect("Encryption output must be serializable.");
 
-	Ok(TLECiphertext {
-		header,
-		body: message_bytes,
-		cipher_suite: S::CIPHER_SUITE.to_vec(),
-	})
+	Ok(TLECiphertext { header, body: message_bytes, cipher_suite: S::CIPHER_SUITE.to_vec() })
 }
 
 /// Decrypt a ciphertext created as a result of timelock encryption
@@ -113,8 +109,7 @@ where
 		.decrypt(&ciphertext.header)
 		.map_err(|_| Error::InvalidSignature)?;
 	// ensure we recovered a valid sized secret
-	let secret_array: [u8; 32] =
-		secret_bytes.try_into().map_err(|_| Error::InvalidSecretKey)?;
+	let secret_array: [u8; 32] = secret_bytes.try_into().map_err(|_| Error::InvalidSecretKey)?;
 
 	// TODO: Enhanced SerializationError handling https://github.com/ideal-lab5/timelock/issues/11
 	let ct = S::Ciphertext::deserialize_compressed(&mut &ciphertext.body[..])
@@ -158,15 +153,11 @@ mod test {
 
 		let sig: E::SignatureGroup = id.extract::<E>(sk).0;
 
-		match tle::<E, AESGCMBlockCipherProvider, OsRng>(
-			p_pub, msk, &message, id, OsRng,
-		) {
+		match tle::<E, AESGCMBlockCipherProvider, OsRng>(p_pub, msk, &message, id, OsRng) {
 			Ok(mut ct) => {
 				// create error scenarios here
 				if inject_bad_ct {
-					let mut output =
-						AESOutput::deserialize_compressed(&mut &ct.body[..])
-							.unwrap();
+					let mut output = AESOutput::deserialize_compressed(&mut &ct.body[..]).unwrap();
 					output.ciphertext = vec![];
 					let mut corrupted = Vec::new();
 					output.serialize_compressed(&mut corrupted).unwrap();
@@ -174,9 +165,7 @@ mod test {
 				}
 
 				if inject_bad_nonce {
-					let mut output =
-						AESOutput::deserialize_compressed(&mut &ct.body[..])
-							.unwrap();
+					let mut output = AESOutput::deserialize_compressed(&mut &ct.body[..]).unwrap();
 					output.nonce = vec![];
 					let mut corrupted = Vec::new();
 					output.serialize_compressed(&mut corrupted).unwrap();
@@ -191,9 +180,7 @@ mod test {
 						});
 					},
 					Err(e) => {
-						handler(TestStatusReport::DecryptionFailed {
-							error: e,
-						});
+						handler(TestStatusReport::DecryptionFailed { error: e });
 					},
 				}
 			},
@@ -205,72 +192,62 @@ mod test {
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_single_sig() {
-		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
-			false,
-			false,
-			&|status: TestStatusReport| match status {
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(false, false, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptSuccess { actual, expected } => {
 					assert_eq!(actual, expected);
 				},
 				_ => panic!("all other conditions invalid"),
-			},
-		);
+			}
+		});
 	}
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_full_sigs_present() {
-		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
-			false,
-			false,
-			&|status: TestStatusReport| match status {
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(false, false, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptSuccess { actual, expected } => {
 					assert_eq!(actual, expected);
 				},
 				_ => panic!("all other conditions invalid"),
-			},
-		);
+			}
+		});
 	}
 
 	#[test]
 	pub fn tlock_can_encrypt_decrypt_with_many_identities_at_threshold() {
-		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
-			false,
-			false,
-			&|status: TestStatusReport| match status {
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(false, false, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptSuccess { actual, expected } => {
 					assert_eq!(actual, expected);
 				},
 				_ => panic!("all other conditions invalid"),
-			},
-		);
+			}
+		});
 	}
 
 	#[test]
 	pub fn tlock_decryption_fails_with_bad_ciphertext() {
-		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
-			true,
-			false,
-			&|status: TestStatusReport| match status {
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(true, false, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptionFailed { error } => {
 					assert_eq!(error, Error::DecryptionError);
 				},
 				_ => panic!("all other conditions invalid"),
-			},
-		);
+			}
+		});
 	}
 
 	#[test]
 	pub fn tlock_decryption_fails_with_bad_nonce() {
-		tlock_test_aes_gcm::<TinyBLS381, OsRng>(
-			false,
-			true,
-			&|status: TestStatusReport| match status {
+		tlock_test_aes_gcm::<TinyBLS381, OsRng>(false, true, &|status: TestStatusReport| {
+			match status {
 				TestStatusReport::DecryptionFailed { error } => {
 					assert_eq!(error, Error::DecryptionError);
 				},
 				_ => panic!("all other conditions invalid"),
-			},
-		);
+			}
+		});
 	}
 
 	#[test]
@@ -291,22 +268,16 @@ mod test {
 		let pub_key_bytes = hex::decode(pk_bytes).expect("Decoding failed");
 		// Deserialize to G1Affine
 		let pub_key =
-			<TinyBLS381 as EngineBLS>::PublicKeyGroup::deserialize_compressed(
-				&*pub_key_bytes,
-			)
-			.unwrap();
+			<TinyBLS381 as EngineBLS>::PublicKeyGroup::deserialize_compressed(&*pub_key_bytes)
+				.unwrap();
 
 		// then we tlock a message for the pubkey
 		let plaintext = b"this is a test".as_slice();
 		let esk = [2; 32];
 
-		let sig_bytes = hex::decode(signature)
-			.expect("The signature should be well formatted");
+		let sig_bytes = hex::decode(signature).expect("The signature should be well formatted");
 		let sig =
-			<TinyBLS381 as EngineBLS>::SignatureGroup::deserialize_compressed(
-				&*sig_bytes,
-			)
-			.unwrap();
+			<TinyBLS381 as EngineBLS>::SignatureGroup::deserialize_compressed(&*sig_bytes).unwrap();
 
 		let message = {
 			let mut hasher = sha2::Sha256::new();
@@ -322,8 +293,7 @@ mod test {
 		.unwrap();
 
 		// then we can decrypt the ciphertext using the signature
-		let result =
-			tld::<TinyBLS381, AESGCMBlockCipherProvider>(ct, sig).unwrap();
+		let result = tld::<TinyBLS381, AESGCMBlockCipherProvider>(ct, sig).unwrap();
 		assert!(result == plaintext);
 	}
 }

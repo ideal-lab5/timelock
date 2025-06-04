@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 by Ideal Labs, LLC
+ * Copyright 2024 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,25 @@
 use alloc::vec::Vec;
 
 use ark_ec::{
+	AffineRepr, CurveGroup,
 	hashing::{
+		HashToCurve,
 		curve_maps::wb::{WBConfig, WBMap},
 		map_to_curve_hasher::{MapToCurve, MapToCurveBasedHasher},
-		HashToCurve,
 	},
 	pairing::{MillerLoopOutput, Pairing},
-	AffineRepr, CurveGroup,
 };
 use ark_ff::field_hashers::DefaultFieldHasher;
 
 use sha2::Sha256; //IETF standard asks for SHA256
 
+use crate::engines::EngineBLS;
 use ark_ec::bls12::Bls12Config;
 use core::marker::PhantomData;
-use crate::engines::EngineBLS;
 
 pub const QUICKNET_CTX: &[u8] = b"BLS_SIG_BLS12381G1_XMD:SHA-256_SSWU_RO_NUL_";
 
-pub type TinyBLS381 =
-	TinyBLSDrandQuicknet<ark_bls12_381::Bls12_381, ark_bls12_381::Config>;
+pub type TinyBLS381 = TinyBLSDrandQuicknet<ark_bls12_381::Bls12_381, ark_bls12_381::Config>;
 
 /// Trait to add extra config for a curve which is not in ArkWorks library
 pub trait CurveExtraConfig {
@@ -69,8 +68,7 @@ where
 	<P as Bls12Config>::G1Config: WBConfig,
 	WBMap<<P as Bls12Config>::G1Config>: MapToCurve<<E as Pairing>::G1>;
 
-impl<E: Pairing, P: Bls12Config + CurveExtraConfig> EngineBLS
-	for TinyBLSDrandQuicknet<E, P>
+impl<E: Pairing, P: Bls12Config + CurveExtraConfig> EngineBLS for TinyBLSDrandQuicknet<E, P>
 where
 	<P as Bls12Config>::G1Config: WBConfig,
 	WBMap<<P as Bls12Config>::G1Config>: MapToCurve<<E as Pairing>::G1>,
@@ -81,41 +79,34 @@ where
 	type SignatureGroup = E::G1;
 	type SignatureGroupAffine = E::G1Affine;
 	type SignaturePrepared = E::G1Prepared;
-	type SignatureGroupBaseField =
-		<<E as Pairing>::G1 as CurveGroup>::BaseField;
+	type SignatureGroupBaseField = <<E as Pairing>::G1 as CurveGroup>::BaseField;
 
 	const SIGNATURE_SERIALIZED_SIZE: usize = 48;
 
 	type PublicKeyGroup = E::G2;
 	type PublicKeyGroupAffine = E::G2Affine;
 	type PublicKeyPrepared = E::G2Prepared;
-	type PublicKeyGroupBaseField =
-		<<E as Pairing>::G2 as CurveGroup>::BaseField;
+	type PublicKeyGroupBaseField = <<E as Pairing>::G2 as CurveGroup>::BaseField;
 
 	const PUBLICKEY_SERIALIZED_SIZE: usize = 96;
 	const SECRET_KEY_SIZE: usize = 32;
 
 	const CURVE_NAME: &'static [u8] = P::CURVE_NAME;
 	const SIG_GROUP_NAME: &'static [u8] = b"G1";
-	const CIPHER_SUIT_DOMAIN_SEPARATION: &'static [u8] =
-		b"_XMD:SHA-256_SSWU_RO_";
+	const CIPHER_SUIT_DOMAIN_SEPARATION: &'static [u8] = b"_XMD:SHA-256_SSWU_RO_";
 
 	type HashToSignatureField = DefaultFieldHasher<Sha256, 128>;
 	type MapToSignatureCurve = WBMap<P::G1Config>;
 
 	fn miller_loop<'a, I>(i: I) -> MillerLoopOutput<E>
 	where
-		I: IntoIterator<
-			Item = &'a (Self::PublicKeyPrepared, Self::SignaturePrepared),
-		>,
+		I: IntoIterator<Item = &'a (Self::PublicKeyPrepared, Self::SignaturePrepared)>,
 	{
 		// We require an ugly unnecessary allocation here because
 		// zcash's pairing library consumes an iterator of references
 		// to tuples of references, which always requires
-		let (i_a, i_b): (
-			Vec<Self::PublicKeyPrepared>,
-			Vec<Self::SignaturePrepared>,
-		) = i.into_iter().cloned().unzip();
+		let (i_a, i_b): (Vec<Self::PublicKeyPrepared>, Vec<Self::SignaturePrepared>) =
+			i.into_iter().cloned().unzip();
 
 		E::multi_miller_loop(i_b, i_a) //in Tiny BLS signature is in G1
 	}
@@ -129,10 +120,8 @@ where
 	}
 
 	/// Prepared negative of the generator of the public key curve.
-	fn minus_generator_of_public_key_group_prepared() -> Self::PublicKeyPrepared
-	{
-		let g2_minus_generator =
-			<Self::PublicKeyGroup as CurveGroup>::Affine::generator();
+	fn minus_generator_of_public_key_group_prepared() -> Self::PublicKeyPrepared {
+		let g2_minus_generator = <Self::PublicKeyGroup as CurveGroup>::Affine::generator();
 		<Self::PublicKeyGroup as Into<Self::PublicKeyPrepared>>::into(
 			-g2_minus_generator.into_group(),
 		)
