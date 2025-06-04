@@ -161,8 +161,7 @@ mod test {
 	use super::*;
 	use alloc::vec;
 	use ark_std::{test_rng, UniformRand};
-	// use w3f_bls::TinyBLS377;
-	use crate::engines::drand::TinyBLS381 as TinyBLS377;
+	use crate::engines::drand::TinyBLS381;
 
 	// this enum represents the conditions or branches that I want to test
 	enum TestStatusReport {
@@ -191,7 +190,7 @@ mod test {
 		let (msk, sk) = extract::<EB>(identity.clone(), derive_bad_sk);
 
 		let p_pub =
-			<<EB as EngineBLS>::PublicKeyGroup as Group>::generator() * msk;
+			<<EB as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator() * msk;
 
 		let mut ct = Ciphertext {
 			u: EB::PublicKeyGroup::generator(),
@@ -244,7 +243,7 @@ mod test {
 		let identity = Identity::new(b"", vec![id_string.to_vec()]);
 		let message: [u8; 32] = [2; 32];
 
-		run_test::<TinyBLS377>(
+		run_test::<TinyBLS381>(
 			identity,
 			message,
 			false,
@@ -264,7 +263,7 @@ mod test {
 		let identity = Identity::new(b"", vec![id_string.to_vec()]);
 		let message: [u8; 32] = [2; 32];
 
-		run_test::<TinyBLS377>(
+		run_test::<TinyBLS381>(
 			identity,
 			message,
 			false,
@@ -284,7 +283,7 @@ mod test {
 		let identity = Identity::new(b"", vec![id_string.to_vec()]);
 		let message: [u8; 32] = [2; 32];
 
-		run_test::<TinyBLS377>(
+		run_test::<TinyBLS381>(
 			identity,
 			message,
 			true,

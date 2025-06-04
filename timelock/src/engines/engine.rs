@@ -31,7 +31,7 @@ use ark_ec::{
 use ark_ff::{field_hashers::HashToField, Field, PrimeField, UniformRand};
 use ark_serialize::CanonicalSerialize;
 use rand::Rng;
-use rand_core::RngCore;
+use ark_std::rand::RngCore;
 
 use core::fmt::Debug;
 

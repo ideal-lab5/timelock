@@ -129,13 +129,14 @@ mod test {
 	use super::*;
 	use crate::{
 		block_ciphers::{AESGCMBlockCipherProvider, AESOutput},
-		engine::drand::TinyBLS381,
+		engines::drand::TinyBLS381,
 	};
 	use alloc::vec;
-	use ark_ec::Group;
+	use ark_ec::PrimeGroup;
 	use ark_ff::UniformRand;
 	use rand_chacha::ChaCha20Rng;
-	use rand_core::{OsRng, SeedableRng};
+	use rand_core::{SeedableRng};
+	use ark_std::rand::rngs::OsRng;
 	use sha2::Digest;
 
 	// specific conditions that we want to test/verify
@@ -317,9 +318,8 @@ mod test {
 
 		let identity = Identity::new(b"", vec![message]);
 
-		let rng = ChaCha20Rng::seed_from_u64(0);
-		let ct = tle::<TinyBLS381, AESGCMBlockCipherProvider, ChaCha20Rng>(
-			pub_key, esk, plaintext, identity, rng,
+		let ct = tle::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
+			pub_key, esk, plaintext, identity, OsRng,
 		)
 		.unwrap();
 
