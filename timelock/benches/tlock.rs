@@ -17,7 +17,6 @@ use ark_ec::PrimeGroup;
 use ark_ff::UniformRand;
 use ark_std::rand::rngs::OsRng;
 use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
-use std::sync::Arc;
 use timelock::{
 	block_ciphers::AESGCMBlockCipherProvider,
 	engines::{EngineBLS, drand::TinyBLS381},
@@ -46,7 +45,6 @@ fn tlock_split(c: &mut Criterion) {
 	let s = <TinyBLS381 as EngineBLS>::Scalar::rand(&mut OsRng);
 	let p_pub = <TinyBLS381 as EngineBLS>::PublicKeyGroup::generator() * s;
 	let id = Identity::new(b"", vec![b"test".to_vec()]);
-	let msk = <TinyBLS381 as EngineBLS>::Scalar::rand(&mut OsRng);
 
 	// Benchmark encryption
 	let mut encrypt_group = c.benchmark_group("tlock_encrypt");

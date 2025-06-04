@@ -15,8 +15,9 @@
  */
 
 use super::utils::{cross_product_32, h2, h3, h4};
+use alloc::vec;
 use ark_ec::PrimeGroup;
-use ark_ff::{UniformRand, Zero};
+use ark_ff::Zero;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::Mul, rand::Rng, vec::Vec};
 use serde::{Deserialize, Serialize};
@@ -41,6 +42,34 @@ pub struct Ciphertext<E: EngineBLS> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum IbeError {
 	DecryptionFailed,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum InputError {
+	InvalidLength,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Input<E: EngineBLS> {
+	data: Vec<u8>,
+	_phantom: ark_std::marker::PhantomData<E>,
+}
+
+impl<E: EngineBLS> Input<E> {
+	pub fn new(data: Vec<u8>) -> Result<Self, InputError> {
+		if data.len() != E::SECRET_KEY_SIZE {
+			return Err(InputError::InvalidLength);
+		}
+		Ok(Self { data, _phantom: ark_std::marker::PhantomData })
+	}
+
+	pub fn from_array(data: [u8; 32]) -> Result<Self, InputError> {
+		Self::new(data.to_vec())
+	}
+
+	pub fn as_bytes(&self) -> &[u8] {
+		&self.data
+	}
 }
 
 /// A type to represent an IBE identity (for which we will encrypt message)
@@ -81,7 +110,7 @@ impl Identity {
 	/// e(Q_ID, P_pub)
 	pub fn encrypt<E, R>(
 		&self,
-		message: &[u8; 32],
+		message: &Input<E>,
 		p_pub: E::PublicKeyGroup,
 		mut rng: R,
 	) -> Ciphertext<E>
@@ -89,13 +118,12 @@ impl Identity {
 		E: EngineBLS,
 		R: Rng + Sized,
 	{
-		let t = E::Scalar::rand(&mut rng);
-		let mut t_bytes = Vec::with_capacity(t.compressed_size());
-		t.serialize_compressed(&mut t_bytes)
-			.expect("compressed size has been allocated");
-		let sigma = h4(&t_bytes);
+		let bytes = message.as_bytes();
+		// sigma <- {0, 1}^d
+		let mut sigma = vec![0u8;E::SECRET_KEY_SIZE];
+		rng.fill_bytes(&mut sigma);
 		// r= H3(sigma, message)
-		let r: E::Scalar = h3::<E>(&sigma, message);
+		let r: E::Scalar = h3::<E>(&sigma, bytes);
 		let p = E::PublicKeyGroup::generator();
 		// U = rP \in \mathbb{G}_1
 		let u = p * r;
@@ -106,7 +134,7 @@ impl Identity {
 		let v_out = cross_product_32(&sigma, &v_rhs);
 		// message (+) H4(sigma)
 		let w_rhs = h4(&sigma);
-		let w_out = cross_product_32(message, &w_rhs);
+		let w_out = cross_product_32(bytes, &w_rhs);
 		// (rP, sigma (+) H2(e(Q_id, P_pub)), message (+) H4(sigma))
 		Ciphertext::<E> { u, v: v_out.to_vec(), w: w_out.to_vec() }
 	}
@@ -117,7 +145,9 @@ impl Identity {
 pub struct IBESecret<E: EngineBLS>(pub E::SignatureGroup);
 
 impl<E: EngineBLS> IBESecret<E> {
-	/// BF-IBE decryption of a ciphertext C = <U, V, W>  
+	/// BF-IBE decryption of a 
+	/// * `ciphertext`: C = <U, V, W> 
+	///
 	/// Attempts to decrypt under the given IBESecret (in G1)
 	pub fn decrypt(&self, ciphertext: &Ciphertext<E>) -> Result<Vec<u8>, IbeError> {
 		// sigma = V (+) H2(e(d_id, U))
@@ -131,6 +161,7 @@ impl<E: EngineBLS> IBESecret<E> {
 		let r = h3::<E>(&sigma, &m);
 		let u_check = p * r;
 
+		// TODO: timing attack? should do a constant-time check
 		if !u_check.eq(&ciphertext.u) {
 			return Err(IbeError::DecryptionFailed);
 		}
@@ -144,7 +175,7 @@ mod test {
 	use super::*;
 	use crate::engines::drand::TinyBLS381;
 	use alloc::vec;
-	use ark_std::{UniformRand, test_rng};
+	use ark_std::{test_rng, UniformRand};
 
 	// this enum represents the conditions or branches that I want to test
 	enum TestStatusReport {
@@ -177,7 +208,7 @@ mod test {
 		let mut ct = Ciphertext { u: EB::PublicKeyGroup::generator(), v: vec![], w: vec![] };
 
 		if !insert_bad_ciphertext {
-			ct = identity.encrypt(&message, p_pub, &mut test_rng());
+			ct = identity.encrypt(&Input::from_array(message).unwrap(), p_pub, &mut test_rng());
 		}
 
 		match sk.decrypt(&ct) {

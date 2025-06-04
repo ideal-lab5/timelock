@@ -16,7 +16,7 @@
 use crate::{
 	block_ciphers::BlockCipherProvider,
 	engines::EngineBLS,
-	ibe::fullident::{Ciphertext as IBECiphertext, IBESecret, Identity},
+	ibe::fullident::{Ciphertext as IBECiphertext, IBESecret, Identity, Input},
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
@@ -79,7 +79,8 @@ where
 	R: Rng + CryptoRng,
 {
 	// IBE encryption 'to the future'
-	let header: IBECiphertext<E> = id.encrypt(&secret_key, p_pub, &mut rng);
+	let input = Input::from_array(secret_key).expect("The secret key has 32");
+	let header: IBECiphertext<E> = id.encrypt(&input, p_pub, &mut rng);
 	// encrypt arbitrary-length messages with a block cipher
 	let body =
 		S::encrypt(message, secret_key, &mut rng).map_err(|_| Error::MessageEncryptionError)?;
