@@ -22,9 +22,9 @@ use rand_core::OsRng;
 use sha2::Digest;
 use timelock::{
 	block_ciphers::AESGCMBlockCipherProvider,
-	curves::drand::TinyBLS381,
+	engines::{EngineBLS, drand::TinyBLS381},
 	ibe::fullident::Identity,
-	tlock::{EngineBLS, TLECiphertext, tld as timelock_decrypt, tle as timelock_encrypt},
+	tlock::{TLECiphertext, tld as timelock_decrypt, tle as timelock_encrypt},
 };
 
 /// The encrypt wrapper used by the Python bindings to call tlock.rs encrypt
