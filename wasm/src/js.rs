@@ -25,8 +25,8 @@ use timelock::{
 };
 
 use getrandom::getrandom;
-use rand_chacha::ChaCha20Rng;
-use rand_core::{RngCore, SeedableRng};
+use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng};
+use ark_std::rand::RngCore;
 use wasm_bindgen::prelude::*;
 
 type R = ChaCha20Rng;

@@ -32,7 +32,6 @@ sha3.workspace = true
 # serialization
 serde.workspace = true
 # entropy
-rand_core.workspace = true
 rand.workspace = true
 
 [dev-dependencies]
@@ -51,6 +50,7 @@ std = [
     "scale-info/std",
     "sha2/std",
     "sha3/std",
+    "aes-gcm/std",
     "ark-std/std",
     "ark-ff/std",
     "ark-poly/std",
@@ -58,4 +58,5 @@ std = [
     "ark-serialize/std",
     "ark-bls12-381/std",
     "rand/std",
+    "serde/std",
 ]

@@ -18,7 +18,7 @@
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use pyo3::{exceptions::PyValueError, prelude::*, wrap_pyfunction};
-use rand_core::OsRng;
+use ark_std::rand::rng::OsRng;
 use sha2::Digest;
 use timelock::{
 	block_ciphers::AESGCMBlockCipherProvider,

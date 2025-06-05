@@ -42,8 +42,8 @@ pub struct Message(pub MessageDigest, pub alloc::vec::Vec<u8>);
 impl Message {
 	pub fn new(context: &[u8], message: &[u8]) -> Message {
 		use sha3::{
-			Shake128,
 			digest::{ExtendableOutput, Update, XofReader},
+			Shake128,
 		};
 		let mut h = Shake128::default();
 		h.update(context);
