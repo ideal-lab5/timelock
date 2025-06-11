@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 
 use aes_gcm::{
-	aead::{Aead, AeadCore, AeadInPlace, KeyInit},
 	Aes256Gcm, Nonce,
+	aead::{Aead, AeadCore, AeadInPlace, KeyInit},
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::Rng;
@@ -26,14 +26,7 @@ use serde::{Deserialize, Serialize};
 use ark_std::{rand::CryptoRng, vec::Vec};
 
 /// The output of AES_GCM Encryption
-#[derive(
-	Clone,
-	Serialize,
-	Deserialize,
-	Debug,
-	CanonicalSerialize,
-	CanonicalDeserialize,
-)]
+#[derive(Clone, Serialize, Deserialize, Debug, CanonicalSerialize, CanonicalDeserialize)]
 pub struct AESOutput {
 	/// the AES ciphertext
 	pub ciphertext: Vec<u8>,
@@ -68,10 +61,7 @@ pub trait BlockCipherProvider<const N: usize> {
 	) -> Result<Self::Ciphertext, Error>;
 
 	/// Decrypt the ciphertext
-	fn decrypt(
-		ciphertext: Self::Ciphertext,
-		key: [u8; N],
-	) -> Result<Vec<u8>, Error>;
+	fn decrypt(ciphertext: Self::Ciphertext, key: [u8; N]) -> Result<Vec<u8>, Error>;
 }
 
 /// This provides the AES_GCM stream cipher, allowing message to be encrypted
@@ -93,8 +83,7 @@ impl BlockCipherProvider<32> for AESGCMBlockCipherProvider {
 		key: [u8; 32],
 		mut rng: R,
 	) -> Result<Self::Ciphertext, Error> {
-		let cipher =
-			Aes256Gcm::new(generic_array::GenericArray::from_slice(&key));
+		let cipher = Aes256Gcm::new(generic_array::GenericArray::from_slice(&key));
 
 		let nonce = Aes256Gcm::generate_nonce(&mut rng); // 96-bits; unique per message
 
@@ -114,15 +103,13 @@ impl BlockCipherProvider<32> for AESGCMBlockCipherProvider {
 	/// * `ciphertext`: the ciphertext to decrypt
 	/// * `nonce`: the nonce used on encryption
 	fn decrypt(ct: Self::Ciphertext, key: [u8; 32]) -> Result<Vec<u8>, Error> {
-		let cipher =
-			Aes256Gcm::new_from_slice(&key).map_err(|_| Error::InvalidKey)?;
+		let cipher = Aes256Gcm::new_from_slice(&key).map_err(|_| Error::InvalidKey)?;
 		if ct.nonce.len() != AES_GCM_NONCE_LEN {
 			return Err(Error::BadNonce);
 		}
 		let nonce = Nonce::from_slice(&ct.nonce);
-		let plaintext = cipher
-			.decrypt(nonce, ct.ciphertext.as_ref())
-			.map_err(|_| Error::InvalidKey)?;
+		let plaintext =
+			cipher.decrypt(nonce, ct.ciphertext.as_ref()).map_err(|_| Error::InvalidKey)?;
 		Ok(plaintext)
 	}
 }
@@ -131,24 +118,20 @@ impl BlockCipherProvider<32> for AESGCMBlockCipherProvider {
 mod test {
 	use super::*;
 	use alloc::vec;
-	use ark_std::rand::SeedableRng;
-	use rand_chacha::ChaCha20Rng;
+	use ark_std::rand::rngs::OsRng;
 
 	#[test]
 	pub fn aes_encrypt_decrypt_works() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
-			Ok(aes_out) => {
-				match AESGCMBlockCipherProvider::decrypt(aes_out, esk) {
-					Ok(plaintext) => {
-						assert_eq!(msg.to_vec(), plaintext);
-					},
-					Err(_) => {
-						panic!("test should pass");
-					},
-				}
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
+			Ok(aes_out) => match AESGCMBlockCipherProvider::decrypt(aes_out, esk) {
+				Ok(plaintext) => {
+					assert_eq!(msg.to_vec(), plaintext);
+				},
+				Err(_) => {
+					panic!("test should pass");
+				},
 			},
 			Err(_) => {
 				panic!("test should pass");
@@ -160,13 +143,9 @@ mod test {
 	pub fn aes_encrypt_decrypt_fails_with_bad_key() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
 			Ok(aes_out) => {
-				let bad = AESOutput {
-					ciphertext: aes_out.ciphertext,
-					nonce: aes_out.nonce,
-				};
+				let bad = AESOutput { ciphertext: aes_out.ciphertext, nonce: aes_out.nonce };
 				match AESGCMBlockCipherProvider::decrypt(bad, [4; 32]) {
 					Ok(_) => {
 						panic!("should be an error");
@@ -186,8 +165,7 @@ mod test {
 	pub fn aes_encrypt_decrypt_fails_with_invalid_nonce() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,
@@ -212,14 +190,13 @@ mod test {
 	pub fn aes_encrypt_decrypt_fails_with_bad_length_nonce() {
 		let msg = b"test";
 		let esk = [2; 32];
-		let rng = ChaCha20Rng::from_seed(esk);
-		match AESGCMBlockCipherProvider::encrypt(msg, esk, rng) {
+		match AESGCMBlockCipherProvider::encrypt(msg, esk, OsRng) {
 			Ok(aes_out) => {
 				let bad = AESOutput {
 					ciphertext: aes_out.ciphertext,
 					nonce: vec![
-						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						0, 0, 0, 0, 0, 0, 0, 0,
+						0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+						0,
 					],
 				};
 				match AESGCMBlockCipherProvider::decrypt(bad, esk) {

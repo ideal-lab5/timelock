@@ -1,6 +1,6 @@
 # Timelock Encryption
 
-Our timelock encryption scheme is a hybrid cryptosystem using both AES-GCM and FullIdent (Identity based encryption). The goal is to be able to encrypt any-length messages for future rounds of the ETF post finality gadget.
+Our timelock encryption scheme is a hybrid cryptosystem using both AES-GCM and FullIdent (Identity based encryption). The goal is to be able to encrypt any-length messages for future rounds of a randomness beacon.
 
 ## Background
 
@@ -12,7 +12,6 @@ AES-GCM is a symmetric stream cipher, meaning you need to use the same key and n
 
 
 ### BF-IBE
-
 
 Identity based encryption is a scheme were a message can be encrypted for an arbitrary string, rather than some specific public key. For example, a message could be encrypted for "bob@encryptme.com" so that only the owner of the identity "bob@encryptme.com" is able to decrypt the message. Our construction uses the BF-IBE "FullIdent" scheme, which is IND-ID-CCA secure. 
 

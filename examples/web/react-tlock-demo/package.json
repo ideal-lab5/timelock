@@ -8,7 +8,7 @@
     "@testing-library/user-event": "^13.5.0",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.1",
-    "@ideallabs/timelock.js": "^1.0.0-dev",
+    "@ideallabs/timelock.js": "file:../../../ts/dist/index.js",
     "js-crypto-hkdf": "^1.0.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

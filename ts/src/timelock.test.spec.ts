@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 import { expect, describe, test } from '@jest/globals'
 import { Result, SupportedCurve, Timelock, u8a } from './timelock'
-import { IdealNetworkIdentityBuilder } from './interfaces/IDNIdentityBuilder'
 import init, {
-  build_encoded_commitment,
   tle,
   tld,
   decrypt,
-} from 'timelock-wasm-wrapper'
+} from '@ideallabs/timelock_wasm_wrapper'
+import { DrandIdentityBuilder } from './interfaces/DrandIdentityBuilder'
 
 jest.mock('timelock-wasm-wrapper')
 
@@ -51,16 +50,16 @@ describe('Timelock Encryption', () => {
 
     const result = await instance.encrypt(
       encodedMessage,
-      42,
-      IdealNetworkIdentityBuilder,
+      0,
+      DrandIdentityBuilder,
       beaconPublicKeyHex,
       ephemeralSecretKeyHex,
     )
 
+    const expectedId = await DrandIdentityBuilder.build(0);
     expect(result).toStrictEqual(expectedResult)
-    expect(build_encoded_commitment).toHaveBeenCalledWith(42, 0)
     expect(tle).toHaveBeenCalledWith(
-      0,
+      expectedId,
       encodedMessage,
       ephemeralSecretKey,
       beaconPublicKey,

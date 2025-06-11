@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+use crate::engines::EngineBLS;
 use alloc::borrow::ToOwned;
 use ark_ff::PrimeField;
 use ark_serialize::CanonicalSerialize;
 use ark_std::vec::Vec;
 use sha2::Digest;
-use w3f_bls::EngineBLS;
 
 /// sha256 hasher
 pub fn sha256(b: &[u8]) -> Vec<u8> {
@@ -72,9 +72,8 @@ mod test {
 	fn utils_can_calc_sha256() {
 		let actual = crate::ibe::utils::sha256(b"test");
 		let expected = vec![
-			159, 134, 208, 129, 136, 76, 125, 101, 154, 47, 234, 160, 197, 90,
-			208, 21, 163, 191, 79, 27, 43, 11, 130, 44, 209, 93, 108, 21, 176,
-			240, 10, 8,
+			159, 134, 208, 129, 136, 76, 125, 101, 154, 47, 234, 160, 197, 90, 208, 21, 163, 191,
+			79, 27, 43, 11, 130, 44, 209, 93, 108, 21, 176, 240, 10, 8,
 		];
 		assert_eq!(actual, expected);
 	}

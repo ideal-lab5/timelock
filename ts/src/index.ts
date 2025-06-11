@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 by Ideal Labs, LLC
+ * Copyright 2025 by Ideal Labs, LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,5 +16,4 @@
 
 export * from './timelock'
 export { IdentityBuilder } from './interfaces/IIdentityBuilder'
-export { IdealNetworkIdentityBuilder } from './interfaces/IDNIdentityBuilder'
 export { DrandIdentityBuilder } from './interfaces/DrandIdentityBuilder'

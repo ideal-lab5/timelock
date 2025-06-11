@@ -8,7 +8,7 @@ Below is an example of encrypting a message for an identity and subsequently dec
 
 ``` rust
 use bf_ibe::{Identity, Ciphertext, IBESecret};
-use w3f_bls::TinyBLS377;
+use timelock::engine::drand::TinyBLS377;
 use ark_std::test_rng;
 
 // Create an identity

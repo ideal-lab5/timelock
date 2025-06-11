@@ -1,13 +1,13 @@
 {
   "name": "@ideallabs/timelock.js",
-  "version": "1.0.1",
+  "version": "0.2.0-dev",
   "description": "A typescript interface for timelock encryption.",
   "license": "Apache-2.0",
   "repository": "https://github.com/ideal-lab5/timelock",
   "main": "dist/index.js",
   "type": "module",
   "dependencies": {
-    "@ideallabs/timelock_wasm_wrapper": "1.0.0"
+    "@ideallabs/timelock_wasm_wrapper": "^0.2.0-dev"
   },
   "scripts": {
     "build:wasm": "cd ../wasm && ./wasm_build.sh",
@@ -20,7 +20,10 @@
     "testEnvironment": "node",
     "testPathIgnorePatterns": [
       "dist"
-    ]
+    ],
+    "moduleNameMapper": {
+      "@ideallabs/timelock_wasm_wrapper": "<rootDir>/src/test/__mocks__/timelock-wasm-wrapper.ts"
+    }
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",

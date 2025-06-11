@@ -79,7 +79,7 @@ const roundNumber = 10
 let ct = await timelockIdeal.encrypt(
   encodedMessage,
   roundNumber,
-  IdealNetworkIdentityBuilder,
+  DrandIdentityBuilder,
   pubkey,
   key
 )
@@ -126,3 +126,6 @@ console.log('Plaintext:', plaintext);
 ## License
 
 Apache-2.0
+
+
+TODO: Investigate time-to-drand-round function

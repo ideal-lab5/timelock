@@ -1,47 +1,41 @@
 [package]
 name = "timelock"
-version = "0.0.2"
-edition = "2021"
 description = "timelock encryption imlementation using BF-IBE"
-license = "Apache-2.0"
-repository = "https://github.com/ideal-lab5/timelock"
-authors = ["Tony Riemer <driemworks@idealabs.network>"]
-rust-version = "1.80"
-homepage = "https://idealabs.network"
+version = "0.2.0"
+edition.workspace =  true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+homepage.workspace = true
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "3.2.2", default-features = false, features = ["derive", "max-encoded-len"] }
-scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
-serde = { version = "1.0.204", default-features = false, features = ["derive", "alloc"] }
-aes-gcm = { version = "0.10.2", default-features = false, features = ["alloc", "aes", "rand_core"] }
-array-bytes = "6.1.0"
-generic-array = "0.14.7"
-sha2 = { version = "0.10.2", default-features = false }
-sha3 = { version = "0.10.0", default-features = false }
-# arkworks dependencies
-ark-std = { version = "0.4.0", default-features = false }
-ark-ff = { version = "0.4.0", default-features = false }
-ark-poly = { version = "0.4.0", default-features = false }
-ark-ec = { version = "0.4.0", default-features = false }
+codec.workspace = true
+scale-info.workspace = true
+array-bytes.workspace = true
+generic-array.workspace = true
 
-ark-serialize = { version = "0.4.0", default-features = false }
-ark-bls12-381 = { version = "0.4.0", features = ["curve"], default-features = false }
-ark-bls12-377 = { version = "0.4.0", features = ["curve"], default-features = false }
+# crypto
+ark-std.workspace = true
+ark-ff.workspace = true
+ark-poly.workspace = true
+ark-ec.workspace = true
+aes-gcm.workspace = true
+ark-serialize.workspace = true
+ark-bls12-381.workspace = true
+ark-bls12-377.workspace = true
+sha2.workspace = true
+sha3.workspace = true
 
-serde_json = { version = "1.0.108", default-features = false, features = ["alloc"] }
-serde_cbor = {version = "0.11.2", default-features = false }
-chacha20poly1305 = { version = "0.10.1", default-features = false}
-
-rand_core = "0.6.4"
-rand_chacha = { version = "0.3.1", default-features = false }
-w3f-bls = { version = "0.1.9", default-features = false }
+# serialization
+serde.workspace = true
+# entropy
+rand.workspace = true
 
 [dev-dependencies]
 hex = "0.4.3"
-ark-ed-on-bls12-381 = { version = "^0.4.0", default-features = false, features = [ "r1cs" ] }
 simulacrum = "0.3.0"
 criterion = { version = "0.4", features = ["html_reports"] }
 
@@ -56,15 +50,13 @@ std = [
     "scale-info/std",
     "sha2/std",
     "sha3/std",
+    "aes-gcm/std",
     "ark-std/std",
     "ark-ff/std",
     "ark-poly/std",
     "ark-ec/std",
     "ark-serialize/std",
     "ark-bls12-381/std",
-    "serde_json/std",
-    "serde_cbor/std",
-    "rand_chacha/std",
-    "chacha20poly1305/std",
-    "w3f-bls/std",
+    "rand/std",
+    "serde/std",
 ]
