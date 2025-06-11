@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 by Ideal Labs, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 //! Adapted from: https://github.com/w3f/bls
 //! ## Adaptation of `ark_ec::PairingEngine` to BLS-like signatures.
 //!
@@ -21,26 +37,19 @@ use core::{borrow::Borrow, ops::MulAssign};
 
 use alloc::{vec, vec::Vec};
 use ark_ec::{
-	AffineRepr, CurveGroup,
 	hashing::{
-		HashToCurve,
 		map_to_curve_hasher::{MapToCurve, MapToCurveBasedHasher},
+		HashToCurve,
 	},
 	pairing::{MillerLoopOutput, Pairing, PairingOutput},
+	AffineRepr, CurveGroup,
 };
-use ark_ff::{Field, PrimeField, UniformRand, field_hashers::HashToField};
+use ark_ff::{field_hashers::HashToField, Field, PrimeField, UniformRand};
 use ark_serialize::CanonicalSerialize;
 use ark_std::rand::RngCore;
 use rand::Rng;
 
 use core::fmt::Debug;
-
-// Expand SHA256 from 256 bits to 1024 bits.
-// let output_bits = 1024;
-// let output_bytes = 1024 / 8;
-// let mut hasher = FullDomainHash::<Sha256>::new(output_bytes).unwrap();
-// hasher.update(b"ATTACK AT DAWN");
-// let result = hasher.finalize_boxed().into_vec();
 
 /// A weakening of `pairing::Engine` to permit transposing the groups.
 ///
@@ -57,8 +66,10 @@ use core::fmt::Debug;
 /// We also extract two functions users may with to override:
 /// random scalar generation and hashing to the singature curve.
 pub trait EngineBLS {
-	type Engine: Pairing; //<Fr = Self::Scalar>;
-	type Scalar: PrimeField; // = <Self::Engine as ScalarEngine>::Fr;
+	/// The pairing engine
+	type Engine: Pairing;
+	/// The prime field for the given engine
+	type Scalar: PrimeField;
 	/// Group where BLS public keys live
 	///
 	/// You should take this to be the `Engine::G1` curve usually
@@ -69,7 +80,6 @@ pub trait EngineBLS {
 		+ From<Self::PublicKeyGroup>
 		+ Into<Self::PublicKeyGroup>
 		+ Into<Self::PublicKeyPrepared>;
-	//+ Into<<Self::PublicKeyGroup as CurveGroup>::Affine>;
 
 	type PublicKeyGroup: CurveGroup<
 			Affine = Self::PublicKeyGroupAffine,
@@ -156,13 +166,6 @@ pub trait EngineBLS {
 	where
 		G1: Into<<Self::PublicKeyGroup as CurveGroup>::Affine>,
 		G2: Into<<Self::SignatureGroup as CurveGroup>::Affine>;
-	/*
-	{
-		Self::final_exponentiation(&Self::miller_loop(
-			[(&(p.into().prepare()), &(q.into().prepare()))].into_iter(),
-		)).unwrap()
-	}
-	*/
 
 	/// Prepared negative of the generator of the public key curve.
 	fn minus_generator_of_public_key_group_prepared() -> Self::PublicKeyPrepared;

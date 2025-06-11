@@ -126,3 +126,6 @@ console.log('Plaintext:', plaintext);
 ## License
 
 Apache-2.0
+
+
+TODO: Investigate time-to-drand-round function

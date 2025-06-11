@@ -1311,7 +1311,7 @@ checksum = "23d434d3f8967a09480fb04132ebe0a3e088c173e6d0ee7897abbdf4eab0f8b9"
 
 [[package]]
 name = "timelock"
-version = "0.2.0"
+version = "0.2.0-dev"
 dependencies = [
  "aes-gcm",
  "ark-bls12-377",

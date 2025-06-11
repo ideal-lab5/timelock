@@ -22,7 +22,6 @@ import init, {
   decrypt,
 } from '@ideallabs/timelock_wasm_wrapper'
 import { DrandIdentityBuilder } from './interfaces/DrandIdentityBuilder'
-// import { DrandIdentityBuilder } from '../dist'
 
 jest.mock('timelock-wasm-wrapper')
 

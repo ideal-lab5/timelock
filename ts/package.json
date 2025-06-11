@@ -1,13 +1,13 @@
 {
   "name": "@ideallabs/timelock.js",
-  "version": "0.2.0-rc",
+  "version": "0.2.0-dev",
   "description": "A typescript interface for timelock encryption.",
   "license": "Apache-2.0",
   "repository": "https://github.com/ideal-lab5/timelock",
   "main": "dist/index.js",
   "type": "module",
   "dependencies": {
-    "@ideallabs/timelock_wasm_wrapper": "file:../wasm/pkg/js"
+    "@ideallabs/timelock_wasm_wrapper": "^0.2.0-dev"
   },
   "scripts": {
     "build:wasm": "cd ../wasm && ./wasm_build.sh",
