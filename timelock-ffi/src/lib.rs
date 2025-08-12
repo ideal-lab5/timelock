@@ -327,6 +327,11 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     const BLS_G2_SIZE: usize = 96;
     const AES_GCM_IV_SIZE: usize = 12;
     const AES_GCM_TAG_SIZE: usize = 16;
+    // The serialization overhead constant accounts for additional bytes used in encoding structures,
+    // such as length prefixes, structure tags, and potential padding. The value of 16 was chosen based
+    // on typical overhead observed in the current serialization format. If the underlying cryptographic
+    // or serialization library changes its format, this value should be reviewed and updated accordingly
+    // to ensure accurate size estimation and prevent buffer overflows or wasted space.
     const SERIALIZATION_OVERHEAD: usize = 16;
     let overhead = BLS_G1_SIZE + BLS_G2_SIZE + AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE + SERIALIZATION_OVERHEAD;
     *estimated_size_out = message_len + overhead;
