@@ -3,3 +3,6 @@
 **/dist
 **/test-results
 **/node_modules
+
+# VS Code settings (user-specific)
+.vscode/settings.json
