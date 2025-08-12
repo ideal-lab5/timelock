@@ -212,20 +212,20 @@ pub unsafe extern "C" fn timelock_encrypt(
     // Parse public key hex string
     let public_key_cstr = match CStr::from_ptr(public_key_hex).to_str() {
         Ok(s) => s,
-        Err(_) => {
+        Err(e) => {
             // Zero out sensitive data before returning
             secret_key_array.fill(0);
-            set_last_error("Invalid UTF-8 in public key hex string");
+            set_last_error(&format!("Invalid UTF-8 in public key hex string: {}", e));
             return TimelockResult::InvalidInput;
         }
     };
 
     let public_key_bytes = match hex::decode(public_key_cstr) {
         Ok(bytes) => bytes,
-        Err(_) => {
+        Err(e) => {
             // Zero out sensitive data before returning
             secret_key_array.fill(0);
-            set_last_error("Invalid hex encoding in public key");
+            set_last_error(&format!("Invalid hex encoding in public key: {}", e));
             return TimelockResult::InvalidPublicKey;
         }
     };
@@ -313,8 +313,18 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     }
 
     // Rough estimate: message + overhead for encryption structures
-    // This is a conservative estimate based on typical ciphertext sizes
-    let overhead = 200; // Approximate overhead for BLS elements, AES-GCM auth tag, etc.
+    // Overhead is calculated based on known component sizes:
+    // - BLS element (compressed G1): 48 bytes
+    // - BLS signature (compressed G2): 96 bytes
+    // - AES-GCM IV: 12 bytes
+    // - AES-GCM auth tag: 16 bytes
+    // - Serialization overhead: 16 bytes (length prefixes, etc.)
+    const BLS_G1_SIZE: usize = 48;
+    const BLS_G2_SIZE: usize = 96;
+    const AES_GCM_IV_SIZE: usize = 12;
+    const AES_GCM_TAG_SIZE: usize = 16;
+    const SERIALIZATION_OVERHEAD: usize = 16;
+    let overhead = BLS_G1_SIZE + BLS_G2_SIZE + AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE + SERIALIZATION_OVERHEAD;
     *estimated_size_out = message_len + overhead;
 
     clear_last_error();
