@@ -224,7 +224,7 @@ pub unsafe extern "C" fn timelock_encrypt(
         Ok(bytes) => bytes,
         Err(e) => {
             // Zero out sensitive data before returning
-            secret_key_array.fill(0);
+            secret_key_array.zeroize();
             set_last_error(&format!("Invalid hex encoding in public key: {}", e));
             return TimelockResult::InvalidPublicKey;
         }

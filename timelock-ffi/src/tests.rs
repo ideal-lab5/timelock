@@ -33,6 +33,12 @@ const MAX_OVERHEAD_BYTES: usize = 1000; // Maximum fixed overhead in bytes
 // a different upper bound is needed.
 const MAX_OVERHEAD_MULTIPLIER: usize = 50; // Maximum overhead multiplier for very small messages
 
+// Mock data size for buffer testing
+const MOCK_DATA_SIZE: usize = 100;
+
+// Drand Quicknet public key for testing
+const DRAND_QUICKNET_PK_HEX: &str = "83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a";
+
 #[test]
 fn test_error_codes() {
     assert_eq!(TimelockResult::Success as i32, 0);
@@ -321,7 +327,7 @@ fn test_large_message_encryption() {
     let secret_key = [2u8; 32];
     
     // Valid Drand quicknet public key
-    let pk_hex = CString::new("83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a").unwrap();
+    let pk_hex = CString::new(DRAND_QUICKNET_PK_HEX).unwrap();
     let mut ciphertext_ptr: *mut TimelockCiphertext = ptr::null_mut();
 
     let result = unsafe {
@@ -362,7 +368,7 @@ fn test_encrypt_decrypt_roundtrip() {
     assert_eq!(identity_result, TimelockResult::Success);
     
     // Valid Drand quicknet public key
-    let pk_hex = CString::new("83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a").unwrap();
+    let pk_hex = CString::new(DRAND_QUICKNET_PK_HEX).unwrap();
     
     // Encrypt
     let mut ciphertext_ptr: *mut TimelockCiphertext = ptr::null_mut();
@@ -480,12 +486,12 @@ fn test_thread_safety() {
 #[test]
 fn test_decrypt_buffer_size_handling() {
     // Create a mock ciphertext structure for testing
-    let mock_data = vec![1u8; 100];
+    let mock_data = vec![1u8; MOCK_DATA_SIZE];
     let mock_data_ptr = Box::into_raw(mock_data.into_boxed_slice()) as *mut u8;
     
     let ciphertext = TimelockCiphertext {
         data: mock_data_ptr,
-        len: 100,
+        len: MOCK_DATA_SIZE,
     };
     
     let sig_hex = CString::new("invalid_signature_for_testing").unwrap();
@@ -508,7 +514,7 @@ fn test_decrypt_buffer_size_handling() {
     
     // Clean up mock data
     unsafe {
-        let _ = Box::from_raw(std::slice::from_raw_parts_mut(mock_data_ptr, 100));
+        let _ = Box::from_raw(std::slice::from_raw_parts_mut(mock_data_ptr, MOCK_DATA_SIZE));
     }
 }
 
@@ -547,7 +553,7 @@ fn test_zero_length_message_encryption() {
     let empty_message = b"";
     let identity = [1u8; 32];
     let secret_key = [2u8; 32];
-    let pk_hex = CString::new("83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a").unwrap();
+    let pk_hex = CString::new(DRAND_QUICKNET_PK_HEX).unwrap();
     let mut ciphertext_ptr: *mut TimelockCiphertext = ptr::null_mut();
 
     let result = unsafe {
@@ -639,7 +645,7 @@ fn test_concurrent_memory_operations() {
             let message = vec![i as u8; 1000];
             let identity = [i as u8; 32];
             let secret_key = [(i * 2) as u8; 32];
-            let pk_hex = CString::new("83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a").unwrap();
+            let pk_hex = CString::new(DRAND_QUICKNET_PK_HEX).unwrap();
             let mut ciphertext_ptr: *mut TimelockCiphertext = ptr::null_mut();
 
             let result = unsafe {
