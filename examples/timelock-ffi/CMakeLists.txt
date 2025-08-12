@@ -27,8 +27,8 @@ if(NOT DEFINED TIMELOCK_FFI_DIR)
     set(TIMELOCK_FFI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../target/release")
 endif()
 
-# Include directories
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../timelock-ffi")
+# Include directories - header will be copied to current directory
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Platform-specific library names and paths
 if(WIN32)
@@ -45,6 +45,7 @@ endif()
 add_custom_command(
     OUTPUT "${TIMELOCK_FFI_LIB_FILE}"
     COMMAND cargo build --release --manifest-path ${CMAKE_CURRENT_SOURCE_DIR}/../../timelock-ffi/Cargo.toml
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../timelock-ffi/timelock.h ${CMAKE_CURRENT_SOURCE_DIR}/timelock.h
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
     COMMENT "Building timelock-ffi Rust library"
     VERBATIM
