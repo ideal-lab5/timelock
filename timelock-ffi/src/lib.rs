@@ -323,6 +323,8 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // Note: These hardcoded constants are based on the BLS12-381 curve specification and AES-GCM standard.
     // They should be validated against actual serialization output if the underlying cryptographic library
     // changes its serialization format. Consider implementing dynamic calculation for production use.
+    // TODO: Consider using library-provided constants (e.g., G1Affine::COMPRESSED_SIZE) when available
+    // to reduce the risk of inconsistencies if libraries change their serialization formats.
     const BLS_G1_SIZE: usize = 48;
     const BLS_G2_SIZE: usize = 96;
     const AES_GCM_IV_SIZE: usize = 12;
@@ -332,6 +334,7 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // on typical overhead observed in the current serialization format. If the underlying cryptographic
     // or serialization library changes its format, this value should be reviewed and updated accordingly
     // to ensure accurate size estimation and prevent buffer overflows or wasted space.
+    // TODO: Consider adding automated tests to validate this constant against actual serialization output.
     const SERIALIZATION_OVERHEAD: usize = 16;
     let overhead = BLS_G1_SIZE + BLS_G2_SIZE + AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE + SERIALIZATION_OVERHEAD;
     *estimated_size_out = message_len + overhead;

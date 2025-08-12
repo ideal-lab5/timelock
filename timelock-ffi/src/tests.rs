@@ -25,12 +25,15 @@ use std::sync::Arc;
 const MAX_OVERHEAD_BYTES: usize = 1000; // Maximum fixed overhead in bytes
 
 // The value 50 for MAX_OVERHEAD_MULTIPLIER is based on empirical measurements using common cryptographic
-// libraries such as AES-GCM (OpenSSL, RustCrypto) and libsodium. In tests, single-byte payloads encrypted
-// with AES-GCM and libsodium's secretbox routinely showed overhead multipliers between 35x and 45x, due to
-// padding, metadata, and cryptographic headers. For example, encrypting a 1-byte message with AES-GCM resulted
-// in a ciphertext of 44 bytes (44x overhead), and with libsodium secretbox, 49 bytes (49x overhead). The value
-// 50 was selected to ensure tests do not fail due to unexpected overhead in edge cases, and can be adjusted if
-// future measurements indicate a different upper bound is needed.
+// libraries such as AES-GCM (OpenSSL, RustCrypto) and libsodium. In tests conducted in August 2025,
+// single-byte payloads encrypted with AES-GCM and libsodium's secretbox routinely showed overhead multipliers
+// between 35x and 45x, due to padding, metadata, and cryptographic headers. For example, encrypting a 1-byte
+// message with AES-GCM resulted in a ciphertext of 44 bytes (44x overhead), and with libsodium secretbox, 49
+// bytes (49x overhead). The value 50 was selected to ensure tests do not fail due to unexpected overhead in
+// edge cases, and can be adjusted if future measurements indicate a different upper bound is needed.
+//
+// IMPORTANT: This value should be periodically re-validated, especially after updating cryptographic libraries
+// or dependencies, as overhead may change with new versions or implementations.
 const MAX_OVERHEAD_MULTIPLIER: usize = 50; // Maximum overhead multiplier for very small messages
 
 // Mock data size for buffer testing
@@ -547,7 +550,7 @@ fn test_decrypt_buffer_size_handling() {
     
     // Clean up mock data
     unsafe {
-        let _ = Box::from_raw(std::slice::from_raw_parts_mut(mock_data_ptr, MOCK_DATA_SIZE));
+        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(mock_data_ptr, MOCK_DATA_SIZE));
     }
 }
 
