@@ -1,0 +1,67 @@
+# Compiled C/C++ executables
+*.exe
+*.out
+basic_example
+enhanced_example
+basic_example_*
+
+# Object files
+*.o
+*.obj
+
+# Libraries (copied from parent build)
+*.lib
+*.dll
+*.so
+*.dylib
+*.a
+
+# Library metadata files
+*.d
+*.exp
+*.pdb
+
+# Generated header file (copied from timelock-ffi/)
+timelock.h
+
+# pkg-config files
+*.pc
+
+# Build artifacts
+*.manifest
+*.res
+
+# CMake build directory
+build/
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+
+# Windows batch file outputs
+*.log
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+
+# Debug information
+*.stackdump
+core.*
+gmon.out
+
+# Test outputs
+test_output.txt
+valgrind.log

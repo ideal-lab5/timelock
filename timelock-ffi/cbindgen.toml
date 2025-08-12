@@ -1,0 +1,14 @@
+language = "C"
+cpp_compat = true
+
+[export]
+include = ["TimelockResult", "TimelockCiphertext"]
+
+[fn]
+rename_args = "ScreamingSnakeCase"
+
+[enum]
+rename_variants = "PascalCase"
+
+[defines]
+"feature = serde" = "TIMELOCK_SERDE_SUPPORT"

@@ -4,12 +4,13 @@ Timelock is an implemention of [timelock encryption](https://docs.idealabs.netwo
 
 ## Getting Started
 
-Timelock is organized into core components and language-specific bindings to support WASM:
+Timelock is organized into core components and language-specific bindings:
 
 - **Core Library**: The [timelock](./timelock/) crate implements the core encryption algorithms and provides support for native Rust applications.
 - **WASM bindings**: The [wasm](./wasm/) lib provides wasm bindings for the timelock encryption implementation, enabling usage of timelock encryption in JavaScript-based applications in a web-enabled context.
 - **TypeScript Bindings**: The [ts](./ts/) library is a TypeScript wrapper to adapt the wasm for easy integration in JavaScript projects. 
 - **Python Bindings**: The [py](./py) library provides Python bindings for timelock encryption.
+- **C FFI Bindings**: The [timelock-ffi](./timelock-ffi/) crate provides C-compatible FFI bindings for integration with C/C++ projects, embedded systems, game engines, and other system software.
 
 ### For Rust Developers
 Navigate to the core timelock implementation [readme](./timelock/README.md) for details on building and using it in Rust.
@@ -31,6 +32,17 @@ The [python bindings](./py/) are enabled with [PyO3](https://pyo3.rs) and allow 
 ``` sh
 pip install timelock
 ```
+
+### For C/C++ Developers
+The [C FFI bindings](./timelock-ffi/) provide a stable C API for integration with C/C++ projects, embedded systems, game engines, and other system software.
+
+```c
+// Use in your C project
+#include "timelock.h"
+// Link against libtimelock_ffi.a (Unix) or timelock_ffi.lib (Windows)
+```
+
+See the [FFI documentation](./timelock-ffi/README.md) for build instructions and examples.
 
 ## Contributing and Code of Conduct
 
