@@ -21,9 +21,11 @@ fn main() {
 
     cbindgen::Builder::new()
         .with_crate(crate_dir)
+        .with_config(cbindgen::Config::from_file("cbindgen.toml").unwrap())
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file("timelock.h");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
+    println!("cargo:rerun-if-changed=cbindgen.toml");
 }

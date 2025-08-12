@@ -1,5 +1,6 @@
 language = "C"
 cpp_compat = true
+sys_includes = ["stdint.h", "stdlib.h", "stdarg.h"]
 
 [export]
 include = ["TimelockResult", "TimelockCiphertext"]
