@@ -21,6 +21,10 @@ use std::ffi::CString;
 use std::thread;
 use std::sync::Arc;
 
+// Test constants for overhead calculations
+const MAX_OVERHEAD_BYTES: usize = 1000; // Maximum fixed overhead in bytes
+const MAX_OVERHEAD_MULTIPLIER: usize = 50; // Maximum overhead multiplier for very small messages
+
 #[test]
 fn test_error_codes() {
     assert_eq!(TimelockResult::Success as i32, 0);
@@ -583,8 +587,9 @@ fn test_estimate_size_boundary_conditions() {
             let result = timelock_estimate_ciphertext_size(*msg_len, &mut estimated);
             assert_eq!(result, TimelockResult::Success);
             assert!(estimated >= *msg_len);
-            // More reasonable upper bound - timelock has significant overhead for small messages
-            assert!(estimated < msg_len + 1000 || estimated < msg_len * 50); 
+            // For small messages, timelock has significant overhead due to fixed headers and metadata.
+            // The overhead should not exceed MAX_OVERHEAD_BYTES or MAX_OVERHEAD_MULTIPLIER times the message length.
+            assert!(estimated < msg_len + MAX_OVERHEAD_BYTES || estimated < msg_len * MAX_OVERHEAD_MULTIPLIER); 
         }
     }
 }

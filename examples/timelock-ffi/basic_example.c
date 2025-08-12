@@ -114,7 +114,8 @@ int main() {
     } else {
         printf("Decryption successful!\n");
         printf("Decrypted message: %.*s\n", (int)plaintext_len, plaintext);
-          // Verify the message matches
+        
+        // Verify the message matches
         if (plaintext_len == strlen(message) && 
             memcmp(plaintext, message, plaintext_len) == 0) {
             printf("SUCCESS: Message verification successful!\n");

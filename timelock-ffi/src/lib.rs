@@ -137,7 +137,9 @@ pub unsafe extern "C" fn timelock_create_drand_identity(
     round_number: u64,
     identity_out: *mut c_uchar,
     identity_len: usize,
-) -> TimelockResult {    if identity_out.is_null() || identity_len < 32 {
+) -> TimelockResult 
+{
+    if identity_out.is_null() || identity_len < 32 {
         set_last_error("Invalid identity buffer: null pointer or insufficient size (need 32 bytes)");
         return TimelockResult::InvalidInput;
     }
@@ -183,7 +185,9 @@ pub unsafe extern "C" fn timelock_encrypt(
     public_key_hex: *const c_char,
     secret_key: *const c_uchar,
     ciphertext_out: *mut *mut TimelockCiphertext,
-) -> TimelockResult {    // Validate inputs
+) -> TimelockResult 
+{
+    // Validate inputs
     if message.is_null()
         || identity.is_null()
         || public_key_hex.is_null()
@@ -198,19 +202,24 @@ pub unsafe extern "C" fn timelock_encrypt(
     // Convert inputs
     let message_slice = slice::from_raw_parts(message, message_len);
     let identity_slice = slice::from_raw_parts(identity, identity_len);
-    let secret_key_slice = slice::from_raw_parts(secret_key, 32);    // Convert secret key to array
+    let secret_key_slice = slice::from_raw_parts(secret_key, 32);
+    
+    // Convert secret key to array
     let mut secret_key_array = [0u8; 32];
     secret_key_array.copy_from_slice(secret_key_slice);
 
     // Parse public key hex string
     let public_key_cstr = match CStr::from_ptr(public_key_hex).to_str() {
-        Ok(s) => s,        Err(_) => {
+        Ok(s) => s,
+        Err(_) => {
             // Zero out sensitive data before returning
             secret_key_array.fill(0);
             set_last_error("Invalid UTF-8 in public key hex string");
             return TimelockResult::InvalidInput;
         }
-    };    let public_key_bytes = match hex::decode(public_key_cstr) {
+    };
+
+    let public_key_bytes = match hex::decode(public_key_cstr) {
         Ok(bytes) => bytes,
         Err(_) => {
             // Zero out sensitive data before returning
@@ -343,7 +352,9 @@ pub unsafe extern "C" fn timelock_decrypt(
     if ct.data.is_null() {
         set_last_error("Invalid ciphertext: null data pointer");
         return TimelockResult::InvalidInput;
-    }    // Parse signature hex string
+    }
+
+    // Parse signature hex string
     let signature_cstr = match CStr::from_ptr(signature_hex).to_str() {
         Ok(s) => s,
         Err(_) => {
@@ -368,7 +379,9 @@ pub unsafe extern "C" fn timelock_decrypt(
             set_last_error("Failed to deserialize BLS signature");
             return TimelockResult::InvalidSignature;
         }
-    };    // Deserialize ciphertext
+    };
+
+    // Deserialize ciphertext
     let ciphertext_slice = slice::from_raw_parts(ct.data, ct.len);
     let timelock_ciphertext: TLECiphertext<TinyBLS381> =
         match TLECiphertext::deserialize_compressed(&ciphertext_slice[..]) {
