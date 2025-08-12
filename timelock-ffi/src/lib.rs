@@ -214,7 +214,7 @@ pub unsafe extern "C" fn timelock_encrypt(
         Ok(s) => s,
         Err(e) => {
             // Zero out sensitive data before returning
-            secret_key_array.fill(0);
+            secret_key_array.zeroize();
             set_last_error(&format!("Invalid UTF-8 in public key hex string: {}", e));
             return TimelockResult::InvalidInput;
         }
@@ -319,6 +319,10 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // - AES-GCM IV: 12 bytes
     // - AES-GCM auth tag: 16 bytes
     // - Serialization overhead: 16 bytes (length prefixes, etc.)
+    // 
+    // Note: These hardcoded constants are based on the BLS12-381 curve specification and AES-GCM standard.
+    // They should be validated against actual serialization output if the underlying cryptographic library
+    // changes its serialization format. Consider implementing dynamic calculation for production use.
     const BLS_G1_SIZE: usize = 48;
     const BLS_G2_SIZE: usize = 96;
     const AES_GCM_IV_SIZE: usize = 12;

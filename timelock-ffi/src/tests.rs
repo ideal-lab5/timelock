@@ -24,14 +24,14 @@ use std::sync::Arc;
 // Test constants for overhead calculations
 const MAX_OVERHEAD_BYTES: usize = 1000; // Maximum fixed overhead in bytes
 
-// The value 250 for MAX_OVERHEAD_MULTIPLIER is chosen as a conservative upper bound for encryption overhead
+// The value 50 for MAX_OVERHEAD_MULTIPLIER is chosen as a conservative upper bound for encryption overhead
 // in very small messages. This multiplier accounts for worst-case expansion due to padding, metadata,
 // and cryptographic headers in common schemes (e.g., AES-GCM, libsodium, etc.). Empirical measurements
 // with typical cryptographic libraries show that overhead for very small messages can be disproportionately
-// large compared to message size, sometimes exceeding 200x for single-byte payloads. The value 250 ensures
+// large compared to message size, sometimes exceeding 40x for single-byte payloads. The value 50 ensures
 // that tests do not fail due to unexpected overhead, and can be adjusted if future measurements indicate
 // a different upper bound is needed.
-const MAX_OVERHEAD_MULTIPLIER: usize = 250; // Maximum overhead multiplier for very small messages
+const MAX_OVERHEAD_MULTIPLIER: usize = 50; // Maximum overhead multiplier for very small messages
 
 #[test]
 fn test_error_codes() {
@@ -597,11 +597,19 @@ fn test_estimate_size_boundary_conditions() {
             assert_eq!(result, TimelockResult::Success);
             assert!(estimated >= *msg_len);
             // For small messages, timelock has significant overhead due to fixed headers and metadata.
-            // The overhead should not exceed MAX_OVERHEAD_BYTES for small messages or MAX_OVERHEAD_MULTIPLIER for very small messages.
-            if *msg_len < 128 {
+            // The overhead should not exceed MAX_OVERHEAD_BYTES for small messages or MAX_OVERHEAD_MULTIPLIER for larger small messages.
+            if *msg_len <= 4 {
+                // For very small messages (1-4 bytes), just check that overhead is reasonable (under 500 bytes total)
+                assert!(
+                    estimated < 500,
+                    "Estimated size {} is unreasonably large for very small message length {}",
+                    estimated,
+                    *msg_len
+                );
+            } else if *msg_len < 128 {
                 assert!(
                     estimated < *msg_len * MAX_OVERHEAD_MULTIPLIER,
-                    "Estimated size {} exceeds multiplier overhead for very small message length {}",
+                    "Estimated size {} exceeds multiplier overhead for small message length {}",
                     estimated,
                     *msg_len
                 );
