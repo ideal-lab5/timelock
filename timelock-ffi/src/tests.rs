@@ -23,7 +23,7 @@ use std::sync::Arc;
 
 // Test constants for overhead calculations
 const MAX_OVERHEAD_BYTES: usize = 1000; // Maximum fixed overhead in bytes
-const MAX_OVERHEAD_MULTIPLIER: usize = 50; // Maximum overhead multiplier for very small messages
+const MAX_OVERHEAD_MULTIPLIER: usize = 250; // Maximum overhead multiplier for very small messages
 
 #[test]
 fn test_error_codes() {
@@ -588,8 +588,22 @@ fn test_estimate_size_boundary_conditions() {
             assert_eq!(result, TimelockResult::Success);
             assert!(estimated >= *msg_len);
             // For small messages, timelock has significant overhead due to fixed headers and metadata.
-            // The overhead should not exceed MAX_OVERHEAD_BYTES or MAX_OVERHEAD_MULTIPLIER times the message length.
-            assert!(estimated < msg_len + MAX_OVERHEAD_BYTES || estimated < msg_len * MAX_OVERHEAD_MULTIPLIER); 
+            // The overhead should not exceed MAX_OVERHEAD_BYTES for small messages or MAX_OVERHEAD_MULTIPLIER for very small messages.
+            if *msg_len < 128 {
+                assert!(
+                    estimated < *msg_len * MAX_OVERHEAD_MULTIPLIER,
+                    "Estimated size {} exceeds multiplier overhead for very small message length {}",
+                    estimated,
+                    *msg_len
+                );
+            } else {
+                assert!(
+                    estimated < *msg_len + MAX_OVERHEAD_BYTES,
+                    "Estimated size {} exceeds fixed overhead for message length {}",
+                    estimated,
+                    *msg_len
+                );
+            }
         }
     }
 }

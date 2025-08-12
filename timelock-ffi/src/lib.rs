@@ -343,7 +343,8 @@ pub unsafe extern "C" fn timelock_decrypt(
     signature_hex: *const c_char,
     plaintext_out: *mut c_uchar,
     plaintext_len: *mut usize,
-) -> TimelockResult {    // Validate inputs
+) -> TimelockResult {
+    // Validate inputs
     if ciphertext.is_null()
         || signature_hex.is_null()
         || plaintext_out.is_null()
