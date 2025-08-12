@@ -89,3 +89,19 @@ install(TARGETS basic_example basic_cpp_example
 install(FILES ${TIMELOCK_FFI_DIR}/timelock.h
     DESTINATION include
 )
+
+# Copy DLL to output directory on Windows
+if(WIN32)
+    add_custom_command(TARGET basic_example POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${TIMELOCK_FFI_DIR}/timelock_ffi.dll"
+        $<TARGET_FILE_DIR:basic_example>
+        COMMENT "Copying timelock_ffi.dll to output directory"
+    )
+    add_custom_command(TARGET basic_cpp_example POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${TIMELOCK_FFI_DIR}/timelock_ffi.dll"
+        $<TARGET_FILE_DIR:basic_cpp_example>
+        COMMENT "Copying timelock_ffi.dll to output directory"
+    )
+endif()

@@ -27,6 +27,7 @@ use std::os::raw::{c_char, c_uchar};
 use std::ptr;
 use std::slice;
 use std::cell::RefCell;
+use zeroize::Zeroize;
 
 use timelock::{
     block_ciphers::AESGCMBlockCipherProvider,
@@ -232,10 +233,11 @@ pub unsafe extern "C" fn timelock_encrypt(
     let public_key = match <TinyBLS381 as EngineBLS>::PublicKeyGroup::deserialize_compressed(
         &public_key_bytes[..],
     ) {
-        Ok(pk) => pk,        Err(_) => {
-            // Zero out sensitive data before returning
-            secret_key_array.fill(0);
-            set_last_error("Failed to deserialize BLS public key");
+        Ok(pk) => pk,
+        Err(e) => {
+            // Securely zero out sensitive data before returning
+            secret_key_array.zeroize();
+            set_last_error(&format!("Failed to deserialize BLS public key: {:?}", e));
             return TimelockResult::InvalidPublicKey;
         }
     };
@@ -251,16 +253,19 @@ pub unsafe extern "C" fn timelock_encrypt(
         timelock_identity,
         OsRng,
     ) {
-        Ok(ct) => ct,        Err(_) => {
-            // Zero out sensitive data before returning
-            secret_key_array.fill(0);
-            set_last_error("Timelock encryption operation failed");
+        Ok(ct) => ct,
+        Err(e) => {
+            // Securely zero out sensitive data before returning
+            secret_key_array.zeroize();
+            set_last_error(&format!("Timelock encryption operation failed: {:?}", e));
             return TimelockResult::EncryptionFailed;
         }
     };
 
-    // Zero out sensitive data after use
-    secret_key_array.fill(0);    // Serialize ciphertext
+    // Securely zero out sensitive data after use
+    secret_key_array.zeroize();
+    
+    // Serialize ciphertext
     let mut serialized = Vec::new();
     if ciphertext.serialize_compressed(&mut serialized).is_err() {
         set_last_error("Failed to serialize ciphertext");
@@ -375,8 +380,8 @@ pub unsafe extern "C" fn timelock_decrypt(
         &signature_bytes[..],
     ) {
         Ok(sig) => sig,
-        Err(_) => {
-            set_last_error("Failed to deserialize BLS signature");
+        Err(e) => {
+            set_last_error(&format!("Failed to deserialize BLS signature: {:?}", e));
             return TimelockResult::InvalidSignature;
         }
     };
@@ -386,8 +391,8 @@ pub unsafe extern "C" fn timelock_decrypt(
     let timelock_ciphertext: TLECiphertext<TinyBLS381> =
         match TLECiphertext::deserialize_compressed(&ciphertext_slice[..]) {
             Ok(ct) => ct,
-            Err(_) => {
-                set_last_error("Failed to deserialize ciphertext");
+            Err(e) => {
+                set_last_error(&format!("Failed to deserialize ciphertext: {:?}", e));
                 return TimelockResult::SerializationError;
             }
         };
@@ -398,8 +403,8 @@ pub unsafe extern "C" fn timelock_decrypt(
         signature,
     ) {
         Ok(plaintext) => plaintext,
-        Err(_) => {
-            set_last_error("Timelock decryption failed: signature may be invalid, round may be in the future, or ciphertext may be corrupted");
+        Err(e) => {
+            set_last_error(&format!("Timelock decryption failed: {:?} (signature may be invalid, round may be in the future, or ciphertext may be corrupted)", e));
             return TimelockResult::DecryptionFailed;
         }
     };

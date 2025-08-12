@@ -1466,6 +1466,7 @@ dependencies = [
  "serde",
  "sha2",
  "timelock",
+ "zeroize",
 ]
 
 [[package]]

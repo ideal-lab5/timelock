@@ -29,6 +29,7 @@ serde.workspace = true
 # FFI
 libc = "0.2"
 hex.workspace = true
+zeroize = "1.8"
 
 [dev-dependencies]
 hex.workspace = true
