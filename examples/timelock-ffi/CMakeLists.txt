@@ -24,25 +24,51 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find the timelock-ffi library
 # You can set TIMELOCK_FFI_DIR to point to your build directory
 if(NOT DEFINED TIMELOCK_FFI_DIR)
-    set(TIMELOCK_FFI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../timelock-ffi/target/release")
+    set(TIMELOCK_FFI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../target/release")
 endif()
 
 # Include directories
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../timelock-ffi")
 
+# Platform-specific library names and paths
+if(WIN32)
+    set(TIMELOCK_FFI_LIB_FILE "${TIMELOCK_FFI_DIR}/deps/timelock_ffi.dll.lib")
+    set(TIMELOCK_FFI_DLL_FILE "${TIMELOCK_FFI_DIR}/deps/timelock_ffi.dll")
+elseif(APPLE)
+    set(TIMELOCK_FFI_LIB_FILE "${TIMELOCK_FFI_DIR}/deps/libtimelock_ffi.dylib")
+else()
+    set(TIMELOCK_FFI_LIB_FILE "${TIMELOCK_FFI_DIR}/deps/libtimelock_ffi.so")
+endif()
+
+# Custom target to build the Rust library first
+# This creates the actual library file as an output
+add_custom_command(
+    OUTPUT "${TIMELOCK_FFI_LIB_FILE}"
+    COMMAND cargo build --release --manifest-path ${CMAKE_CURRENT_SOURCE_DIR}/../../timelock-ffi/Cargo.toml
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
+    COMMENT "Building timelock-ffi Rust library"
+    VERBATIM
+)
+
+# Create a target that depends on the library file
+add_custom_target(build_rust_lib DEPENDS "${TIMELOCK_FFI_LIB_FILE}")
+
 # Find the library (try both static and dynamic)
+# This may not find the library during initial configure, but that's OK
 find_library(TIMELOCK_FFI_LIB
     NAMES timelock_ffi libtimelock_ffi
     PATHS ${TIMELOCK_FFI_DIR}
-    PATH_SUFFIXES lib
+    PATH_SUFFIXES deps lib
     NO_DEFAULT_PATH
 )
 
+# If library not found during configure, use the expected path
 if(NOT TIMELOCK_FFI_LIB)
-    message(FATAL_ERROR "Could not find timelock-ffi library in ${TIMELOCK_FFI_DIR}")
+    message(STATUS "timelock-ffi library not found during configure, will be built by Rust")
+    set(TIMELOCK_FFI_LIB "${TIMELOCK_FFI_LIB_FILE}")
+else()
+    message(STATUS "Found timelock-ffi library: ${TIMELOCK_FFI_LIB}")
 endif()
-
-message(STATUS "Found timelock-ffi library: ${TIMELOCK_FFI_LIB}")
 
 # Platform-specific settings
 if(WIN32)
@@ -67,13 +93,6 @@ target_link_libraries(basic_cpp_example ${TIMELOCK_FFI_LIB} ${PLATFORM_LIBS})
 # Set output directory
 set_target_properties(basic_example basic_cpp_example PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
-# Custom target to build the Rust library first
-add_custom_target(build_rust_lib
-    COMMAND cargo build --release --manifest-path ${CMAKE_CURRENT_SOURCE_DIR}/../../timelock-ffi/Cargo.toml
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../..
-    COMMENT "Building timelock-ffi Rust library"
 )
 
 # Make sure Rust library is built before C/C++ examples
