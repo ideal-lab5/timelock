@@ -430,8 +430,8 @@ pub unsafe extern "C" fn timelock_decrypt(
         signature,
     ) {
         Ok(plaintext) => plaintext,
-        Err(e) => {
-            set_last_error(&format!("Timelock decryption failed: {:?} (signature may be invalid, round may be in the future, or ciphertext may be corrupted)", e));
+        Err(_) => {
+            set_last_error("Timelock decryption failed: signature may be invalid, round may be in the future, or ciphertext may be corrupted");
             return TimelockResult::DecryptionFailed;
         }
     };
