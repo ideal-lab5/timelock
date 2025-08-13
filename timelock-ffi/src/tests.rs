@@ -550,7 +550,7 @@ fn test_decrypt_buffer_size_handling() {
     
     // Clean up mock data
     unsafe {
-        let _ = Box::from_raw(mock_data_ptr as *mut [u8; MOCK_DATA_SIZE]);
+        let _ = Box::from_raw(std::slice::from_raw_parts_mut(mock_data_ptr, MOCK_DATA_SIZE));
     }
 }
 
