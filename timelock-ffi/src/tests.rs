@@ -22,7 +22,32 @@ use std::thread;
 use std::sync::Arc;
 
 // Test constants for overhead calculations
-const MAX_OVERHEAD_BYTES: usize = 1000; // Maximum fixed overhead in bytes
+// Cryptographic overhead components (in bytes):
+// - BLS signature: 96 bytes (G1 element)
+// - AES-GCM tag: 16 bytes
+// - AES-GCM nonce: 12 bytes
+// - Public key: 48 bytes (G2 element)
+// - Additional protocol metadata: 32 bytes (estimate)
+// - Serialization overhead: 32 bytes (estimate)
+// - Safety margin: 64 bytes (to account for future changes or unknowns)
+const BLS_SIGNATURE_SIZE: usize = 96;
+const AES_GCM_TAG_SIZE: usize = 16;
+const AES_GCM_NONCE_SIZE: usize = 12;
+const PUBLIC_KEY_SIZE: usize = 48;
+const PROTOCOL_METADATA_SIZE: usize = 32;
+const SERIALIZATION_OVERHEAD: usize = 32;
+const SAFETY_MARGIN: usize = 64;
+
+/// Maximum fixed overhead in bytes for large messages.
+/// This is the sum of all known cryptographic and protocol overheads, plus a safety margin.
+const MAX_OVERHEAD_BYTES: usize = 
+    BLS_SIGNATURE_SIZE +
+    AES_GCM_TAG_SIZE +
+    AES_GCM_NONCE_SIZE +
+    PUBLIC_KEY_SIZE +
+    PROTOCOL_METADATA_SIZE +
+    SERIALIZATION_OVERHEAD +
+    SAFETY_MARGIN;
 
 // The value 50 for MAX_OVERHEAD_MULTIPLIER is based on empirical measurements using common cryptographic
 // libraries such as AES-GCM (OpenSSL, RustCrypto) and libsodium. In tests conducted in June 2024,
