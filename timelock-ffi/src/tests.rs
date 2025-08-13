@@ -49,17 +49,25 @@ const MAX_OVERHEAD_BYTES: usize =
     SERIALIZATION_OVERHEAD +
     SAFETY_MARGIN;
 
-// The value 50 for MAX_OVERHEAD_MULTIPLIER is based on empirical measurements using common cryptographic
-// libraries such as AES-GCM (OpenSSL, RustCrypto) and libsodium. In tests conducted in June 2024,
-// single-byte payloads encrypted with AES-GCM and libsodium's secretbox routinely showed overhead multipliers
-// between 35x and 45x, due to padding, metadata, and cryptographic headers. For example, encrypting a 1-byte
-// message with AES-GCM resulted in a ciphertext of 44 bytes (44x overhead), and with libsodium secretbox, 49
-// bytes (49x overhead). The value 50 was selected to ensure tests do not fail due to unexpected overhead in
-// edge cases, and can be adjusted if future measurements indicate a different upper bound is needed.
+// Overhead multiplier for very small messages is calculated based on documented measurements.
+// For example, in June 2024, encrypting a 1-byte payload resulted in:
+// - AES-GCM: 44 bytes ciphertext (44x overhead)
+// - libsodium secretbox: 49 bytes ciphertext (49x overhead)
+// The multiplier is set to the maximum observed ratio, rounded up, to ensure tests do not fail
+// due to unexpected overhead in edge cases. Update these values if future measurements indicate a
+// different upper bound.
 //
-// IMPORTANT: This value should be periodically re-validated, especially after updating cryptographic libraries
-// or dependencies, as overhead may change with new versions or implementations.
-const MAX_OVERHEAD_MULTIPLIER: usize = 50; // Maximum overhead multiplier for very small messages
+// IMPORTANT: This value should be periodically re-validated, especially after updating
+// cryptographic libraries or dependencies, as overhead may change with new versions or implementations.
+const MIN_MSG_SIZE: usize = 1;
+const AES_GCM_CIPHERTEXT_SIZE: usize = 44;
+const LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE: usize = 49;
+const MAX_OVERHEAD_MULTIPLIER: usize = {
+    // Compute the maximum observed multiplier, rounded up
+    let aes_gcm_mult = (AES_GCM_CIPHERTEXT_SIZE + MIN_MSG_SIZE - 1) / MIN_MSG_SIZE;
+    let secretbox_mult = (LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE + MIN_MSG_SIZE - 1) / MIN_MSG_SIZE;
+    if aes_gcm_mult > secretbox_mult { aes_gcm_mult } else { secretbox_mult }
+};
 
 // Mock data size for buffer testing
 const MOCK_DATA_SIZE: usize = 100;
