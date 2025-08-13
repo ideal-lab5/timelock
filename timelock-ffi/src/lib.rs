@@ -339,6 +339,9 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // They should be validated against actual serialization output if the underlying cryptographic library
     // changes its serialization format. Consider implementing dynamic calculation for production use.
     const AES_GCM_IV_SIZE: usize = 12;
+    // AES-GCM authentication tag size is standardized at 16 bytes per RFC 5116.
+    // This constant ensures compatibility with the AES-GCM implementation and should
+    // remain consistent with the underlying cryptographic library's tag size.
     const AES_GCM_TAG_SIZE: usize = 16;
     let overhead = BLS_G1_SIZE + BLS_G2_SIZE + AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE + SERIALIZATION_OVERHEAD;
     *estimated_size_out = message_len + overhead;
