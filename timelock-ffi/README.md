@@ -9,7 +9,6 @@ This crate provides a stable C API for timelock encryption operations, making it
 - **C/C++ Applications**: Native desktop applications, system software, embedded systems
 - **Game Engines**: Unreal Engine, custom C++ game engines
 - **System Software**: Operating system components, device drivers, network services
-- **Legacy Systems**: Integration with existing C-based codebases
 
 ## Features
 
