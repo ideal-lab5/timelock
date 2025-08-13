@@ -6,3 +6,6 @@
 
 # VS Code settings (user-specific)
 .vscode/settings.json
+
+# Local documentation and working files
+SummaryDocs/
