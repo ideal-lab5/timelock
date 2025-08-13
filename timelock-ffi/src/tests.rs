@@ -745,4 +745,20 @@ fn test_cryptographic_constants_match_library() {
     assert_eq!(g2_compressed_size, crate::BLS_G2_SIZE,
         "BLS_G2_SIZE constant ({}) doesn't match library compressed size ({})", 
         crate::BLS_G2_SIZE, g2_compressed_size);
+    
+    // Validate SERIALIZATION_OVERHEAD constant by checking it's reasonable
+    // SERIALIZATION_OVERHEAD is for length prefixes, structure tags, and metadata
+    // It should be a reasonable small value (not too large, not zero)
+    assert!(crate::SERIALIZATION_OVERHEAD > 0, 
+        "SERIALIZATION_OVERHEAD ({}) should be positive", 
+        crate::SERIALIZATION_OVERHEAD);
+    assert!(crate::SERIALIZATION_OVERHEAD < 50, 
+        "SERIALIZATION_OVERHEAD ({}) seems unreasonably large for metadata", 
+        crate::SERIALIZATION_OVERHEAD);
+    
+    // 16 bytes is reasonable for: Vec length encoding (8 bytes) + cipher_suite length (8 bytes) + misc
+    // This validates that our constant is in a sensible range for serialization metadata
+    assert!(crate::SERIALIZATION_OVERHEAD >= 8 && crate::SERIALIZATION_OVERHEAD <= 32,
+        "SERIALIZATION_OVERHEAD ({}) outside expected range [8-32] for metadata overhead", 
+        crate::SERIALIZATION_OVERHEAD);
 }

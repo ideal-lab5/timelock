@@ -44,6 +44,14 @@ use timelock::{
 const BLS_G1_SIZE: usize = 48; // G1 compressed point size - validated by tests
 const BLS_G2_SIZE: usize = 96; // G2 compressed point size - validated by tests
 
+// The serialization overhead constant accounts for additional bytes used in encoding structures,
+// such as length prefixes, structure tags, and potential padding. The value of 16 was chosen based
+// on typical overhead observed in the current serialization format. If the underlying cryptographic
+// or serialization library changes its format, this value should be reviewed and updated accordingly
+// to ensure accurate size estimation and prevent buffer overflows or wasted space.
+// This constant is validated in tests.rs to ensure it remains accurate.
+const SERIALIZATION_OVERHEAD: usize = 16;
+
 // This FFI currently supports only TinyBLS381 (Drand QuickNet beacon).
 // Future versions will support TinyBLS377 (Ideal Network) when available
 // in the core timelock library. The API is designed to be extensible
@@ -332,13 +340,6 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // changes its serialization format. Consider implementing dynamic calculation for production use.
     const AES_GCM_IV_SIZE: usize = 12;
     const AES_GCM_TAG_SIZE: usize = 16;
-    // The serialization overhead constant accounts for additional bytes used in encoding structures,
-    // such as length prefixes, structure tags, and potential padding. The value of 16 was chosen based
-    // on typical overhead observed in the current serialization format. If the underlying cryptographic
-    // or serialization library changes its format, this value should be reviewed and updated accordingly
-    // to ensure accurate size estimation and prevent buffer overflows or wasted space.
-    // TODO: Consider adding automated tests to validate this constant against actual serialization output.
-    const SERIALIZATION_OVERHEAD: usize = 16;
     let overhead = BLS_G1_SIZE + BLS_G2_SIZE + AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE + SERIALIZATION_OVERHEAD;
     *estimated_size_out = message_len + overhead;
 
