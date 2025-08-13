@@ -10,7 +10,6 @@ This crate provides a stable C API for timelock encryption operations, making it
 - **Game Engines**: Unreal Engine, custom C++ game engines
 - **System Software**: Operating system components, device drivers, network services
 - **Legacy Systems**: Integration with existing C-based codebases
-- **Language Bindings**: Foundation for bindings to other languages (Python via ctypes, Go via cgo, etc.)
 
 ## Features
 
@@ -319,22 +318,10 @@ cargo test --manifest-path timelock-ffi/Cargo.toml --target-dir timelock-ffi/tar
 # Run with memory leak detection (Linux)
 valgrind --leak-check=full cargo test --manifest-path timelock-ffi/Cargo.toml --target-dir timelock-ffi/target
 
-# Build FFI library first (from workspace root)
+# Build FFI library (from workspace root)
 cd timelock-ffi
 cargo build --release --target-dir target
 cbindgen --config cbindgen.toml --crate timelock-ffi --output timelock.h
-
-# Build and test C examples
-cd examples/timelock-ffi
-make all                                 # Cross-platform via Makefile
-
-# Run individual examples
-./target/basic_example                   # Linux/macOS
-./target/basic_cpp_example "Test message"
-
-# Windows examples (after building with CMake)
-./bin/Release/basic_example.exe          # Windows
-./bin/Release/basic_cpp_example.exe
 ```
 
 ## Contributing
