@@ -7,7 +7,6 @@ Timelock is an implemention of [timelock encryption](https://docs.idealabs.netwo
 Timelock is organized into core components and language-specific bindings:
 
 - **Core Library**: The [timelock](./timelock/) crate implements the core encryption algorithms and provides support for native Rust applications.
-- **C/C++ FFI**: The [timelock-ffi](./timelock-ffi/) crate provides C/C++ bindings for native integration in system software.
 - **WASM bindings**: The [wasm](./wasm/) lib provides wasm bindings for the timelock encryption implementation, enabling usage of timelock encryption in JavaScript-based applications in a web-enabled context.
 - **TypeScript Bindings**: The [ts](./ts/) library is a TypeScript wrapper to adapt the wasm for easy integration in JavaScript projects. 
 - **Python Bindings**: The [py](./py) library provides Python bindings for timelock encryption.
