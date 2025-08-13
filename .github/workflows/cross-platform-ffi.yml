@@ -46,6 +46,16 @@ jobs:
       run: |
         choco install cmake
     
+    - name: Run Rust core library tests
+      run: |
+        cd timelock
+        cargo test --verbose
+    
+    - name: Run Rust FFI binding tests  
+      run: |
+        cd timelock-ffi
+        cargo test --verbose
+    
     - name: Build and test via CMake
       run: |
         cd examples/timelock-ffi
