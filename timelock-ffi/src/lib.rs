@@ -323,10 +323,14 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // Note: These hardcoded constants are based on the BLS12-381 curve specification and AES-GCM standard.
     // They should be validated against actual serialization output if the underlying cryptographic library
     // changes its serialization format. Consider implementing dynamic calculation for production use.
-    // TODO: Consider using library-provided constants (e.g., G1Affine::COMPRESSED_SIZE) when available
-    // to reduce the risk of inconsistencies if libraries change their serialization formats.
-    const BLS_G1_SIZE: usize = 48;
-    const BLS_G2_SIZE: usize = 96;
+    // BLS12-381 curve specification constants
+    // These sizes are fixed by the BLS12-381 curve specification and are unlikely to change.
+    // G1 compressed points: 48 bytes (32 bytes for x-coordinate + 16 bytes for flags/padding)
+    // G2 compressed points: 96 bytes (64 bytes for x-coordinate + 32 bytes for flags/padding)
+    // While library-provided constants would be ideal, they are not consistently available
+    // across different ark-bls12-381 versions. These values are standardized by the curve spec.
+    const BLS_G1_SIZE: usize = 48; // G1 compressed point size for BLS12-381
+    const BLS_G2_SIZE: usize = 96; // G2 compressed point size for BLS12-381
     const AES_GCM_IV_SIZE: usize = 12;
     const AES_GCM_TAG_SIZE: usize = 16;
     // The serialization overhead constant accounts for additional bytes used in encoding structures,
