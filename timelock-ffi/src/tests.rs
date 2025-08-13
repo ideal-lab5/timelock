@@ -25,7 +25,7 @@ use std::sync::Arc;
 const MAX_OVERHEAD_BYTES: usize = 1000; // Maximum fixed overhead in bytes
 
 // The value 50 for MAX_OVERHEAD_MULTIPLIER is based on empirical measurements using common cryptographic
-// libraries such as AES-GCM (OpenSSL, RustCrypto) and libsodium. In tests conducted in August 2025,
+// libraries such as AES-GCM (OpenSSL, RustCrypto) and libsodium. In tests conducted in June 2024,
 // single-byte payloads encrypted with AES-GCM and libsodium's secretbox routinely showed overhead multipliers
 // between 35x and 45x, due to padding, metadata, and cryptographic headers. For example, encrypting a 1-byte
 // message with AES-GCM resulted in a ciphertext of 44 bytes (44x overhead), and with libsodium secretbox, 49
@@ -550,7 +550,7 @@ fn test_decrypt_buffer_size_handling() {
     
     // Clean up mock data
     unsafe {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(mock_data_ptr, MOCK_DATA_SIZE));
+        let _ = Box::from_raw(mock_data_ptr as *mut [u8; MOCK_DATA_SIZE]);
     }
 }
 
