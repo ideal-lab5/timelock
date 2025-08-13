@@ -723,3 +723,26 @@ fn test_concurrent_memory_operations() {
         handle.join().unwrap();
     }
 }
+
+#[test]
+fn test_cryptographic_constants_match_library() {
+    // Validate that our hardcoded BLS constants match the actual library values
+    // This test ensures that if the ark-bls12-381 library changes its serialization
+    // format, we'll be alerted to update our constants.
+    use ark_bls12_381::{G1Affine, G2Affine};
+    use ark_serialize::CanonicalSerialize;
+    
+    let g1_dummy = G1Affine::identity();
+    let g2_dummy = G2Affine::identity();
+    
+    let g1_compressed_size = g1_dummy.compressed_size();
+    let g2_compressed_size = g2_dummy.compressed_size();
+    
+    // Ensure our module-level constants match what the library actually produces
+    assert_eq!(g1_compressed_size, crate::BLS_G1_SIZE, 
+        "BLS_G1_SIZE constant ({}) doesn't match library compressed size ({})", 
+        crate::BLS_G1_SIZE, g1_compressed_size);
+    assert_eq!(g2_compressed_size, crate::BLS_G2_SIZE,
+        "BLS_G2_SIZE constant ({}) doesn't match library compressed size ({})", 
+        crate::BLS_G2_SIZE, g2_compressed_size);
+}
