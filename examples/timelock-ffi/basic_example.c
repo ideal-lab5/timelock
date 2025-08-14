@@ -59,6 +59,9 @@ int main() {
 
     // The signature for round 2000 (48-byte compressed G1 signature from QuickNet)
     // This signature was obtained from the Drand Quicknet public randomness beacon for round 2000.
+    // Note: Drand QuickNet uses the "bls-unchained-g1-rfc9380" scheme, which places BLS signatures
+    // on G1 (48 bytes) instead of the typical G2 (96 bytes). This is intentional and matches
+    // the QuickNet protocol specification. There is no protocol mismatch here.
     // You can verify or fetch this value using the Drand HTTP API for QuickNet, e.g.:
     // curl https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971/public/latest | jq .signature
     // Or for a specific round:

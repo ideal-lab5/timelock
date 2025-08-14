@@ -22,18 +22,20 @@ use std::thread;
 use std::sync::Arc;
 
 // Test constants for overhead calculations
+use crate::{BLS_G1_SIZE, BLS_G2_SIZE};
+
 // Cryptographic overhead components (in bytes):
-// - BLS signature: 96 bytes (G1 element)
+// Note: Drand QuickNet uses the "bls-unchained-g1-rfc9380" scheme, which places
+// signatures on G1 (48 bytes) and public keys on G2 (96 bytes), opposite to typical BLS.
+// - BLS signature: 48 bytes (G1 element in QuickNet "bls-unchained-g1-rfc9380" scheme)
 // - AES-GCM tag: 16 bytes
 // - AES-GCM nonce: 12 bytes
-// - Public key: 48 bytes (G2 element)
+// - Public key: 96 bytes (G2 element in QuickNet "bls-unchained-g1-rfc9380" scheme)
 // - Additional protocol metadata: 32 bytes (estimate)
 // - Serialization overhead: 32 bytes (estimate)
 // - Safety margin: 64 bytes (to account for future changes or unknowns)
-const BLS_SIGNATURE_SIZE: usize = 96;
 const AES_GCM_TAG_SIZE: usize = 16;
 const AES_GCM_NONCE_SIZE: usize = 12;
-const PUBLIC_KEY_SIZE: usize = 48;
 const PROTOCOL_METADATA_SIZE: usize = 32;
 const SERIALIZATION_OVERHEAD: usize = 32;
 const SAFETY_MARGIN: usize = 64;
@@ -41,10 +43,10 @@ const SAFETY_MARGIN: usize = 64;
 /// Maximum fixed overhead in bytes for large messages.
 /// This is the sum of all known cryptographic and protocol overheads, plus a safety margin.
 const MAX_OVERHEAD_BYTES: usize = 
-    BLS_SIGNATURE_SIZE +
+    BLS_G1_SIZE +  // BLS signature (G1 element in QuickNet "bls-unchained-g1-rfc9380")
     AES_GCM_TAG_SIZE +
     AES_GCM_NONCE_SIZE +
-    PUBLIC_KEY_SIZE +
+    BLS_G2_SIZE +  // Public key (G2 element in QuickNet "bls-unchained-g1-rfc9380")
     PROTOCOL_METADATA_SIZE +
     SERIALIZATION_OVERHEAD +
     SAFETY_MARGIN;
@@ -65,6 +67,7 @@ const LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE: usize = 49;
 
 /// Returns the maximum observed overhead multiplier, using ceiling division.
 const fn calculate_max_overhead_multiplier(aes_gcm_size: usize, secretbox_size: usize, min_msg_size: usize) -> usize {
+    // Manual ceiling division: (a + b - 1) / b
     let aes_gcm_mult = (aes_gcm_size + min_msg_size - 1) / min_msg_size;
     let secretbox_mult = (secretbox_size + min_msg_size - 1) / min_msg_size;
     if aes_gcm_mult > secretbox_mult { aes_gcm_mult } else { secretbox_mult }

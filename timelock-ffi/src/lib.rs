@@ -45,8 +45,8 @@ use timelock::{
 // the actual compressed_size() values returned by the ark-bls12-381 library.
 // If the library changes its serialization format, the tests will fail,
 // alerting us to update these values.
-const BLS_G1_SIZE: usize = 48; // G1 compressed point size (BLS12-381 spec)
-const BLS_G2_SIZE: usize = 96; // G2 compressed point size (BLS12-381 spec)
+pub const BLS_G1_SIZE: usize = 48; // G1 compressed point size (BLS12-381 spec)
+pub const BLS_G2_SIZE: usize = 96; // G2 compressed point size (BLS12-381 spec)
 
 /// Runtime validation of cryptographic constants to ensure consistency with the underlying library.
 /// This function is called during initialization to verify that our hardcoded constants match
