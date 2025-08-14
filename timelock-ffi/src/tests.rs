@@ -13,7 +13,7 @@
     // Always verify the current public key at https://api.drand.sh/info before use.
     //
     // Intended use: TESTING ONLY. This key is hardcoded for use in test code and examples.
-    // DO NOT USE THIS KEY IN PRODUCTION. Always fetch and verify the current production key from the official Drand API.rsion 2.0 (the "License");
+    // DO NOT USE THIS KEY IN PRODUCTION. Always fetch and verify the current production key from the official Drand API.
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *

@@ -95,7 +95,6 @@ fn validate_cryptographic_constants() -> Result<(), String> {
 // on comprehensive analysis including protocol metadata and serialization format overhead observed
 // in the current implementation. This value is kept consistent with test calculations to ensure
 // accurate size estimation and prevent buffer overflows and minimize wasted space.
-// such as length prefixes, structure tags, and potential padding.
 // The value of 32 was determined by summing the maximum observed overhead from:
 // - 4 bytes for length prefix (u32)
 // - 1–2 bytes for structure tags or enum discriminants
