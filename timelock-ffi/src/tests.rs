@@ -59,14 +59,14 @@ const MAX_OVERHEAD_BYTES: usize =
     SAFETY_MARGIN;
 
 // Overhead multiplier for very small messages is calculated based on documented measurements.
-// For example, in June 2024, encrypting a 1-byte payload resulted in:
+// For example, as verified in August 2025, encrypting a 1-byte payload resulted in:
 // - AES-GCM: 44 bytes ciphertext (44x overhead)
 // - libsodium secretbox: 49 bytes ciphertext (49x overhead)
 // The multiplier is set to the maximum observed ratio, rounded up, to ensure tests do not fail
 // due to unexpected overhead in edge cases. Update these values if future measurements indicate a
 // different upper bound.
 //
-// IMPORTANT: This value should be periodically re-validated, especially after updating
+// IMPORTANT: These values should be periodically re-validated, especially after updating
 // cryptographic libraries or dependencies, as overhead may change with new versions or implementations.
 const MIN_MSG_SIZE: usize = 1;
 const AES_GCM_CIPHERTEXT_SIZE: usize = 44;

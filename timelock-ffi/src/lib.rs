@@ -18,6 +18,13 @@
 //!
 //! This crate provides C-compatible wrapper functions for timelock encryption
 //! and decryption operations, enabling integration with C/C++ projects.
+//!
+//! ## Supported Beacon Types
+//!
+//! This FFI currently supports only TinyBLS381 (Drand QuickNet beacon).
+//! Future versions will support TinyBLS377 (Ideal Network) when available
+//! in the core timelock library. The API is designed to be extensible
+//! for multiple beacon types while maintaining backward compatibility.
 
 // Allow unsafe code for FFI bindings - this is necessary for C interop
 #![allow(unsafe_code)]
@@ -28,6 +35,10 @@ use std::ptr;
 use std::slice;
 use std::cell::RefCell;
 use zeroize::Zeroize;
+
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_std::rand::rngs::OsRng;
+use sha2::{Digest, Sha256};
 
 use timelock::{
     block_ciphers::AESGCMBlockCipherProvider,
@@ -105,14 +116,6 @@ fn validate_cryptographic_constants() -> Result<(), String> {
 // **Update this value if the serialization format changes, new fields are added to encoded structures,
 // or if protocol metadata overhead increases.**
 const SERIALIZATION_OVERHEAD: usize = 32;
-
-// This FFI currently supports only TinyBLS381 (Drand QuickNet beacon).
-// Future versions will support TinyBLS377 (Ideal Network) when available
-// in the core timelock library. The API is designed to be extensible
-// for multiple beacon types while maintaining backward compatibility.
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::rand::rngs::OsRng;
-use sha2::{Digest, Sha256};
 
 // Constants for C consumers
 /// Size of identity buffer in bytes
@@ -382,21 +385,7 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
         return TimelockResult::InvalidInput;
     }
 
-    // Rough estimate: message + overhead for encryption structures
-    // Overhead is calculated based on known component sizes:
-    // - BLS element (compressed G1): 48 bytes
-    // - BLS signature (compressed G2): 96 bytes
-    // - AES-GCM IV: 12 bytes
-    // - AES-GCM auth tag: 16 bytes
-    // - Serialization overhead: 32 bytes (protocol metadata, length prefixes, etc.)
-    // 
-    // NOTE: The following constants are hardcoded based on the BLS12-381 curve specification and AES-GCM standard.
-    // If the underlying cryptographic library or serialization format changes, these values MUST be reviewed and updated.
-    // Estimate ciphertext size as message length plus fixed overhead for encryption structures.
-    // See module-level documentation for details and rationale.
-    
-    // Use the same overhead calculation as tests for consistency
-    // This ensures that size estimates match the validation logic in tests
+    // Estimate ciphertext size as message length plus the predefined overhead constant
     let overhead = TIMELOCK_CIPHERTEXT_OVERHEAD;
     *estimated_size_out = message_len + overhead;
 
