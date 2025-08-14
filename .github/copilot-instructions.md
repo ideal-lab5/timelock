@@ -30,6 +30,13 @@
 - Comments include detailed rationale for cryptographic constants and memory patterns
 - Architecture prioritizes safety and clarity over brevity
 
+## Documentation and Comment Style
+- Current comment verbosity level is intentional and appropriate for FFI safety
+- Avoid suggesting overly elaborate doc comments for internal helper functions
+- Existing multiline comments are acceptable - don't require conversion to doc comments
+- Focus on substance over style for comment formatting
+- Import organization is flexible - functional placement is acceptable
+
 ## Review Focus Areas
 Please focus code reviews on:
 - Actual memory safety violations (not standard FFI patterns)
@@ -42,3 +49,6 @@ Please avoid flagging:
 - Standard FFI memory management patterns
 - Hardcoded test values with proper warnings
 - Inline validation logic in preference to complex abstractions
+- Existing comment verbosity or formatting (current level is intentional)
+- Minor import organization preferences (functional placement is acceptable)
+- Multiline comments that don't need conversion to doc comments
