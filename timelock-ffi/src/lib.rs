@@ -36,13 +36,17 @@ use timelock::{
     tlock::{tle, tld, TLECiphertext},
 };
 
-// BLS12-381 curve element sizes - validated against library in tests  
-// These constants are validated in tests.rs to ensure they match
+// BLS12-381 curve element sizes, as defined by the BLS12-381 specification:
+// - G1 compressed point: 48 bytes  
+// - G2 compressed point: 96 bytes
+// See: IETF draft-irtf-cfrg-pairing-friendly-curves-09, Section 4.3.3
+// (https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-09#section-4.3.3)
+// These constants are also validated in tests.rs and at runtime to ensure they match
 // the actual compressed_size() values returned by the ark-bls12-381 library.
 // If the library changes its serialization format, the tests will fail,
 // alerting us to update these values.
-const BLS_G1_SIZE: usize = 48; // G1 compressed point size - validated by tests
-const BLS_G2_SIZE: usize = 96; // G2 compressed point size - validated by tests
+const BLS_G1_SIZE: usize = 48; // G1 compressed point size (BLS12-381 spec)
+const BLS_G2_SIZE: usize = 96; // G2 compressed point size (BLS12-381 spec)
 
 /// Runtime validation of cryptographic constants to ensure consistency with the underlying library.
 /// This function is called during initialization to verify that our hardcoded constants match
@@ -50,10 +54,9 @@ const BLS_G2_SIZE: usize = 96; // G2 compressed point size - validated by tests
 fn validate_cryptographic_constants() -> Result<(), String> {
     use ark_bls12_381::{G1Affine, G2Affine};
     use ark_serialize::CanonicalSerialize;
-    use ark_ec::AffineRepr;
     
-    let g1_size = G1Affine::zero().compressed_size();
-    let g2_size = G2Affine::zero().compressed_size();
+    let g1_size = G1Affine::identity().compressed_size();
+    let g2_size = G2Affine::identity().compressed_size();
     
     if g1_size != BLS_G1_SIZE {
         return Err(format!(

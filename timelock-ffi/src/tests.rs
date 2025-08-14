@@ -62,12 +62,19 @@ const MAX_OVERHEAD_BYTES: usize =
 const MIN_MSG_SIZE: usize = 1;
 const AES_GCM_CIPHERTEXT_SIZE: usize = 44;
 const LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE: usize = 49;
-const MAX_OVERHEAD_MULTIPLIER: usize = {
-    // Compute the maximum observed multiplier, rounded up
-    let aes_gcm_mult = (AES_GCM_CIPHERTEXT_SIZE + MIN_MSG_SIZE - 1) / MIN_MSG_SIZE;
-    let secretbox_mult = (LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE + MIN_MSG_SIZE - 1) / MIN_MSG_SIZE;
+
+/// Returns the maximum observed overhead multiplier, using ceiling division.
+const fn max_overhead_multiplier(aes_gcm_size: usize, secretbox_size: usize, min_msg_size: usize) -> usize {
+    let aes_gcm_mult = (aes_gcm_size + min_msg_size - 1) / min_msg_size;
+    let secretbox_mult = (secretbox_size + min_msg_size - 1) / min_msg_size;
     if aes_gcm_mult > secretbox_mult { aes_gcm_mult } else { secretbox_mult }
-};
+}
+
+const MAX_OVERHEAD_MULTIPLIER: usize = max_overhead_multiplier(
+    AES_GCM_CIPHERTEXT_SIZE,
+    LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE,
+    MIN_MSG_SIZE,
+);
 
 // Mock data size for buffer testing
 const MOCK_DATA_SIZE: usize = 100;
@@ -77,7 +84,10 @@ const VERY_SMALL_MESSAGE_THRESHOLD: usize = 4; // Messages <= 4 bytes use fixed 
 const SMALL_MESSAGE_THRESHOLD: usize = 128; // Messages < 128 bytes use multiplier check
 const MAX_REASONABLE_OVERHEAD_BYTES: usize = 500; // Maximum reasonable overhead for very small messages
 
-// Drand Quicknet public key for testing
+// Drand Quicknet production public key for testing and examples.
+// This is the production Quicknet chain public key from api.drand.sh.
+// Chain ID: 52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
+// Public key (hex): 83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a
 const DRAND_QUICKNET_PK_HEX: &str = "83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a";
 
 /// Helper function to validate size estimation overhead for different message sizes
