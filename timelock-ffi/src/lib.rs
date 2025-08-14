@@ -47,17 +47,17 @@ use timelock::{
     tlock::{tle, tld, TLECiphertext},
 };
 
-// BLS12-381 curve element sizes, as defined by the BLS12-381 specification:
-// - G1 compressed point: 48 bytes  
-// - G2 compressed point: 96 bytes
+// BLS12-381 curve element sizes - referenced from the EngineBLS implementation
+// to ensure consistency and support future multi-curve extensibility.
+// These constants are derived from TinyBLS381 which implements the BLS12-381 specification:
+// - G1 compressed point: 48 bytes (signatures)
+// - G2 compressed point: 96 bytes (public keys) 
 // See: RFC 9380, Section 4.3.3
 // (https://datatracker.ietf.org/doc/html/rfc9380#section-4.3.3)
-// These constants are also validated in tests.rs and at runtime to ensure they match
-// the actual compressed_size() values returned by the ark-bls12-381 library.
-// If the library changes its serialization format, the tests will fail,
-// alerting us to update these values.
-pub const BLS_G1_SIZE: usize = 48; // G1 compressed point size (BLS12-381 spec)
-pub const BLS_G2_SIZE: usize = 96; // G2 compressed point size (BLS12-381 spec)
+// These constants are validated against the actual compressed_size() values
+// returned by the ark-bls12-381 library during initialization.
+pub const BLS_G1_SIZE: usize = <TinyBLS381 as EngineBLS>::SIGNATURE_SERIALIZED_SIZE;
+pub const BLS_G2_SIZE: usize = <TinyBLS381 as EngineBLS>::PUBLICKEY_SERIALIZED_SIZE;
 
 // AES-GCM constants
 pub const AES_GCM_IV_SIZE: usize = 12;  // AES-GCM initialization vector size (96 bits)
@@ -66,7 +66,7 @@ pub const AES_GCM_IV_SIZE: usize = 12;  // AES-GCM initialization vector size (9
 // remain consistent with the underlying cryptographic library's tag size.
 pub const AES_GCM_TAG_SIZE: usize = 16;
 
-// Total fixed overhead for timelock ciphertext (shared between lib and tests)
+// Total fixed overhead for timelock ciphertext
 pub const TIMELOCK_CIPHERTEXT_OVERHEAD: usize = 
     BLS_G1_SIZE +  // BLS signature (G1 element in QuickNet "bls-unchained-g1-rfc9380")
     BLS_G2_SIZE +  // Public key (G2 element in QuickNet "bls-unchained-g1-rfc9380")
@@ -75,7 +75,7 @@ pub const TIMELOCK_CIPHERTEXT_OVERHEAD: usize =
     SERIALIZATION_OVERHEAD;
 
 /// Runtime validation of cryptographic constants to ensure consistency with the underlying library.
-/// This function is called during initialization to verify that our hardcoded constants match
+/// This function is called during initialization to verify that our engine-derived constants match
 /// the actual sizes reported by the cryptographic library.
 fn validate_cryptographic_constants() -> Result<(), String> {
     use ark_bls12_381::{G1Affine, G2Affine};
@@ -104,8 +104,8 @@ fn validate_cryptographic_constants() -> Result<(), String> {
 /// The serialization overhead constant accounts for additional bytes used in encoding structures,
 /// such as length prefixes, structure tags, and potential padding. The value of 32 was chosen based
 /// on comprehensive analysis including protocol metadata and serialization format overhead observed
-/// in the current implementation. This value is kept consistent with test calculations to ensure
-/// accurate size estimation and prevent buffer overflows and minimize wasted space.
+/// in the current implementation. This value ensures accurate size estimation and prevents buffer 
+/// overflows while minimizing wasted space.
 /// 
 /// The value of 32 was determined by summing the maximum observed overhead from:
 /// - 4 bytes for length prefix (u32)
@@ -114,19 +114,19 @@ fn validate_cryptographic_constants() -> Result<(), String> {
 /// - remaining bytes for alignment/padding and future-proofing
 /// 
 /// This value was chosen based on analysis of the current serialization format (ark-serialize and protocol metadata)
-/// and is validated in tests.rs to ensure it remains accurate.
+/// and is validated during library initialization to ensure it remains accurate.
 /// **Update this value if the serialization format changes, new fields are added to encoded structures,
 /// or if protocol metadata overhead increases.**
 const SERIALIZATION_OVERHEAD: usize = 32;
 
 // Constants for C consumers
-/// Size of identity buffer in bytes
+/// Size of identity buffer in bytes (SHA-256 digest size)
 #[no_mangle]
 pub static TIMELOCK_IDENTITY_SIZE: usize = 32;
 
-/// Size of secret key in bytes
+/// Size of secret key in bytes (derived from the BLS engine implementation)
 #[no_mangle]
-pub static TIMELOCK_SECRET_KEY_SIZE: usize = 32;
+pub static TIMELOCK_SECRET_KEY_SIZE: usize = <TinyBLS381 as EngineBLS>::SECRET_KEY_SIZE;
 
 // Thread-local storage for error messages
 thread_local! {

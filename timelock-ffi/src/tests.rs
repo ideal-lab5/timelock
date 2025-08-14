@@ -780,7 +780,7 @@ fn test_concurrent_memory_operations() {
 
 #[test]
 fn test_cryptographic_constants_match_library() {
-    // Validate that our hardcoded BLS constants match the actual library values
+    // Validate that our engine-derived BLS constants match the actual library values
     // This test ensures that if the ark-bls12-381 library changes its serialization
     // format, we'll be alerted to update our constants.
     use ark_bls12_381::{G1Affine, G2Affine};
