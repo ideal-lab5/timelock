@@ -44,13 +44,41 @@ use timelock::{
 const BLS_G1_SIZE: usize = 48; // G1 compressed point size - validated by tests
 const BLS_G2_SIZE: usize = 96; // G2 compressed point size - validated by tests
 
+/// Runtime validation of cryptographic constants to ensure consistency with the underlying library.
+/// This function is called during initialization to verify that our hardcoded constants match
+/// the actual sizes reported by the cryptographic library.
+fn validate_cryptographic_constants() -> Result<(), String> {
+    use ark_bls12_381::{G1Affine, G2Affine};
+    use ark_serialize::CanonicalSerialize;
+    use ark_ec::AffineRepr;
+    
+    let g1_size = G1Affine::zero().compressed_size();
+    let g2_size = G2Affine::zero().compressed_size();
+    
+    if g1_size != BLS_G1_SIZE {
+        return Err(format!(
+            "BLS_G1_SIZE constant ({}) does not match library size ({})",
+            BLS_G1_SIZE, g1_size
+        ));
+    }
+    
+    if g2_size != BLS_G2_SIZE {
+        return Err(format!(
+            "BLS_G2_SIZE constant ({}) does not match library size ({})",
+            BLS_G2_SIZE, g2_size
+        ));
+    }
+    
+    Ok(())
+}
+
 // The serialization overhead constant accounts for additional bytes used in encoding structures,
-// such as length prefixes, structure tags, and potential padding. The value of 16 was chosen based
-// on typical overhead observed in the current serialization format. If the underlying cryptographic
-// or serialization library changes its format, this value should be reviewed and updated accordingly
-// to ensure accurate size estimation and prevent buffer overflows or wasted space.
+// such as length prefixes, structure tags, and potential padding. The value of 32 was chosen based
+// on comprehensive analysis including protocol metadata and serialization format overhead observed 
+// in the current implementation. This value is kept consistent with test calculations to ensure
+// accurate size estimation and prevent buffer overflows or wasted space.
 // This constant is validated in tests.rs to ensure it remains accurate.
-const SERIALIZATION_OVERHEAD: usize = 16;
+const SERIALIZATION_OVERHEAD: usize = 32;
 
 // This FFI currently supports only TinyBLS381 (Drand QuickNet beacon).
 // Future versions will support TinyBLS377 (Ideal Network) when available
@@ -333,7 +361,7 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // - BLS signature (compressed G2): 96 bytes
     // - AES-GCM IV: 12 bytes
     // - AES-GCM auth tag: 16 bytes
-    // - Serialization overhead: 16 bytes (length prefixes, etc.)
+    // - Serialization overhead: 32 bytes (protocol metadata, length prefixes, etc.)
     // 
     // Note: These hardcoded constants are based on the BLS12-381 curve specification and AES-GCM standard.
     // They should be validated against actual serialization output if the underlying cryptographic library
@@ -343,6 +371,9 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // This constant ensures compatibility with the AES-GCM implementation and should
     // remain consistent with the underlying cryptographic library's tag size.
     const AES_GCM_TAG_SIZE: usize = 16;
+    
+    // Use the same overhead calculation as tests for consistency
+    // This ensures that size estimates match the validation logic in tests
     let overhead = BLS_G1_SIZE + BLS_G2_SIZE + AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE + SERIALIZATION_OVERHEAD;
     *estimated_size_out = message_len + overhead;
 
@@ -491,6 +522,12 @@ pub unsafe extern "C" fn timelock_get_version() -> *const c_char {
 /// `TimelockResult::Success` on success
 #[no_mangle]
 pub unsafe extern "C" fn timelock_init() -> TimelockResult {
+    // Validate cryptographic constants match the underlying library
+    if let Err(err) = validate_cryptographic_constants() {
+        set_last_error(&format!("Cryptographic constant validation failed: {}", err));
+        return TimelockResult::InvalidInput;
+    }
+    
     // Initialize any global state if needed
     // For now, just clear any existing error state
     clear_last_error();

@@ -72,6 +72,11 @@ const MAX_OVERHEAD_MULTIPLIER: usize = {
 // Mock data size for buffer testing
 const MOCK_DATA_SIZE: usize = 100;
 
+// Constants for message size boundary testing
+const VERY_SMALL_MESSAGE_THRESHOLD: usize = 4; // Messages <= 4 bytes use fixed overhead check
+const SMALL_MESSAGE_THRESHOLD: usize = 128; // Messages < 128 bytes use multiplier check
+const MAX_REASONABLE_OVERHEAD_BYTES: usize = 500; // Maximum reasonable overhead for very small messages
+
 // Drand Quicknet public key for testing
 const DRAND_QUICKNET_PK_HEX: &str = "83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a";
 
@@ -82,16 +87,16 @@ const DRAND_QUICKNET_PK_HEX: &str = "83cf0f2896adee7eb8b5f01fcad3912212c437e0073
 /// For small messages (5-127 bytes), we use the multiplier-based check.
 /// For larger messages (128+ bytes), we use a fixed overhead check.
 fn validate_size_estimation_overhead(msg_len: usize, estimated: usize) {
-    if msg_len <= 4 {
+    if msg_len <= VERY_SMALL_MESSAGE_THRESHOLD {
         // For very small messages (1-4 bytes), just check that overhead is reasonable (under 500 bytes total)
         // This threshold was chosen because the fixed cryptographic headers (188 bytes) dominate the overhead
         assert!(
-            estimated < 500,
+            estimated < MAX_REASONABLE_OVERHEAD_BYTES,
             "Estimated size {} is unreasonably large for very small message length {}",
             estimated,
             msg_len
         );
-    } else if msg_len < 128 {
+    } else if msg_len < SMALL_MESSAGE_THRESHOLD {
         assert!(
             estimated < msg_len * MAX_OVERHEAD_MULTIPLIER,
             "Estimated size {} exceeds multiplier overhead for small message length {}",
