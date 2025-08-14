@@ -21,23 +21,9 @@ use std::ffi::CString;
 use std::thread;
 use std::sync::Arc;
 
-// Test constants for overhead calculations
+// Cryptographic component sizes and protocol overhead constants
 // Import shared constants from main library
-use crate::{BLS_G1_SIZE, BLS_G2_SIZE, AES_GCM_TAG_SIZE, AES_GCM_IV_SIZE};
-
-// Cryptographic overhead components (in bytes):
-// Note: Drand QuickNet uses the "bls-unchained-g1-rfc9380" scheme, which places
-// signatures on G1 (48 bytes) and public keys on G2 (96 bytes), opposite to typical BLS.
-// - BLS signature: 48 bytes (G1 element in QuickNet "bls-unchained-g1-rfc9380" scheme)
-// - AES-GCM tag: 16 bytes
-// - AES-GCM nonce: 12 bytes
-// - Public key: 96 bytes (G2 element in QuickNet "bls-unchained-g1-rfc9380" scheme)
-// - Additional protocol metadata: 32 bytes (estimate)
-// - Serialization overhead: 32 bytes (estimate)
-// - Safety margin: 64 bytes (to account for future changes or unknowns)
-
-// Use IV_SIZE as NONCE_SIZE (they are the same thing in AES-GCM)
-const AES_GCM_NONCE_SIZE: usize = AES_GCM_IV_SIZE;
+use crate::TIMELOCK_CIPHERTEXT_OVERHEAD;
 
 // Estimated size (in bytes) for protocol-level metadata fields.
 // This 32-byte estimate is intended to cover:
@@ -49,18 +35,13 @@ const AES_GCM_NONCE_SIZE: usize = AES_GCM_IV_SIZE;
 // The value is intentionally conservative to accommodate possible future changes
 // or unanticipated metadata fields. Update as protocol details become more concrete.
 const PROTOCOL_METADATA_SIZE: usize = 32;
-const SERIALIZATION_OVERHEAD: usize = 32;
 const SAFETY_MARGIN: usize = 64;
 
 /// Maximum fixed overhead in bytes for large messages.
-/// This is the sum of all known cryptographic and protocol overheads, plus a safety margin.
+/// This is the shared timelock ciphertext overhead plus test-specific margins.
 const MAX_OVERHEAD_BYTES: usize = 
-    BLS_G1_SIZE +  // BLS signature (G1 element in QuickNet "bls-unchained-g1-rfc9380")
-    AES_GCM_TAG_SIZE +
-    AES_GCM_NONCE_SIZE +
-    BLS_G2_SIZE +  // Public key (G2 element in QuickNet "bls-unchained-g1-rfc9380")
+    TIMELOCK_CIPHERTEXT_OVERHEAD +  // Core timelock overhead (shared with lib.rs)
     PROTOCOL_METADATA_SIZE +
-    SERIALIZATION_OVERHEAD +
     SAFETY_MARGIN;
 
 // Overhead multiplier for very small messages is calculated based on documented measurements.

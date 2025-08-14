@@ -55,6 +55,14 @@ pub const AES_GCM_IV_SIZE: usize = 12;  // AES-GCM initialization vector size (9
 // remain consistent with the underlying cryptographic library's tag size.
 pub const AES_GCM_TAG_SIZE: usize = 16;
 
+// Total fixed overhead for timelock ciphertext (shared between lib and tests)
+pub const TIMELOCK_CIPHERTEXT_OVERHEAD: usize = 
+    BLS_G1_SIZE +  // BLS signature (G1 element in QuickNet "bls-unchained-g1-rfc9380")
+    BLS_G2_SIZE +  // Public key (G2 element in QuickNet "bls-unchained-g1-rfc9380")
+    AES_GCM_IV_SIZE + 
+    AES_GCM_TAG_SIZE + 
+    SERIALIZATION_OVERHEAD;
+
 /// Runtime validation of cryptographic constants to ensure consistency with the underlying library.
 /// This function is called during initialization to verify that our hardcoded constants match
 /// the actual sizes reported by the cryptographic library.
@@ -375,15 +383,12 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // 
     // NOTE: The following constants are hardcoded based on the BLS12-381 curve specification and AES-GCM standard.
     // If the underlying cryptographic library or serialization format changes, these values MUST be reviewed and updated.
-    // Dynamic calculation is NOT currently implemented; this function provides only an estimate based on current assumptions.
-    // This is due to the complexity and performance overhead of parsing and serializing all cryptographic components at runtime.
-    // At present, the overhead is stable given the fixed cryptographic primitives and serialization format.
-    // If future requirements demand more precise sizing (e.g., for streaming or variable-format support), dynamic calculation may be implemented.
-    // For now, maintainers should review this estimate if cryptographic primitives or serialization formats change.
+    // Estimate ciphertext size as message length plus fixed overhead for encryption structures.
+    // See module-level documentation for details and rationale.
     
     // Use the same overhead calculation as tests for consistency
     // This ensures that size estimates match the validation logic in tests
-    let overhead = BLS_G1_SIZE + BLS_G2_SIZE + AES_GCM_IV_SIZE + AES_GCM_TAG_SIZE + SERIALIZATION_OVERHEAD;
+    let overhead = TIMELOCK_CIPHERTEXT_OVERHEAD;
     *estimated_size_out = message_len + overhead;
 
     clear_last_error();
