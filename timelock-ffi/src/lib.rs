@@ -252,7 +252,15 @@ pub unsafe extern "C" fn timelock_create_drand_identity(
 /// # Returns
 /// `TimelockResult::Success` on success, error code on failure
 
-/// Helper function to ensure sensitive data is always cleared on error paths
+/// Helper function to ensure sensitive data is always cleared on error paths.
+///
+/// # Parameters
+/// - `secret_key_array`: Mutable reference to the 32-byte secret key array to be zeroized.
+/// - `error_message`: Error message to set for the last error.
+/// - `result_code`: The `TimelockResult` error code to return.
+///
+/// # Returns
+/// Returns the provided `result_code` after zeroizing the secret key and setting the error message.
 fn fail_with_zeroize(
     secret_key_array: &mut [u8; 32],
     error_message: &str,
@@ -415,10 +423,17 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
 
     // Estimate ciphertext size as message length plus the predefined overhead constant
     let overhead = TIMELOCK_CIPHERTEXT_OVERHEAD;
-    *estimated_size_out = message_len + overhead;
-
-    clear_last_error();
-    TimelockResult::Success
+    match message_len.checked_add(overhead) {
+        Some(total) => {
+            *estimated_size_out = total;
+            clear_last_error();
+            TimelockResult::Success
+        }
+        None => {
+            set_last_error("Integer overflow when estimating ciphertext size");
+            TimelockResult::InvalidInput
+        }
+    }
 }
 
 /// Decrypt a timelock-encrypted ciphertext
