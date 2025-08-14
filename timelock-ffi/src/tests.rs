@@ -559,13 +559,14 @@ fn test_thread_safety() {
 
 #[test]
 fn test_decrypt_buffer_size_handling() {
-    // Create a mock ciphertext structure for testing
-    let mock_data = vec![1u8; MOCK_DATA_SIZE];
-    let mock_data_ptr = Box::into_raw(mock_data.into_boxed_slice()) as *mut u8;
+    // Create a mock ciphertext structure for testing - using automatic cleanup
+    let mut boxed = vec![1u8; MOCK_DATA_SIZE].into_boxed_slice();
+    let data_ptr = boxed.as_mut_ptr();
+    let len = boxed.len();
     
     let ciphertext = TimelockCiphertext {
-        data: mock_data_ptr,
-        len: MOCK_DATA_SIZE,
+        data: data_ptr,
+        len,
     };
     
     let sig_hex = CString::new("invalid_signature_for_testing").unwrap();
@@ -586,10 +587,7 @@ fn test_decrypt_buffer_size_handling() {
     // Should fail due to invalid signature, but not crash due to small buffer
     assert!(result != TimelockResult::Success);
     
-    // Clean up mock data
-    unsafe {
-        let _ = Box::from_raw(mock_data_ptr as *mut [u8; MOCK_DATA_SIZE]);
-    }
+    // boxed drops here automatically - no manual cleanup needed!
 }
 
 #[test]
