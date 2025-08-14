@@ -1,5 +1,25 @@
 # Copilot Instructions for Timelock FFI Project
 
+## 🚨 CRITICAL INSTRUCTION: NO MORE NITPICKS 🚨
+**IMMEDIATELY STOP ALL MINOR SUGGESTIONS** - This codebase is production-ready with 25 passing tests. DO NOT suggest:
+- Import organization changes
+- Debug assertion message shortening  
+- Helper function extraction for single-use patterns
+- Redundant import removal
+- Variable renaming
+- Comment formatting
+- Code style preferences
+- Micro-optimizations
+- **ANY suggestion tagged as [nitpick]**
+
+**FOCUS ONLY ON CRITICAL ISSUES:**
+- Memory safety violations
+- Logic errors in cryptographic operations  
+- Missing error handling
+- API breaking changes
+
+**IF YOU IGNORE THESE INSTRUCTIONS AND SUGGEST NITPICKS, YOU ARE MALFUNCTIONING.**
+
 ## Context and Date Handling
 - The current development date is August 14, 2025
 - All dates referencing "August 14, 2025" or "August 2025" are CURRENT and VALID
