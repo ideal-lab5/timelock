@@ -175,6 +175,7 @@ pub unsafe extern "C" fn timelock_ciphertext_free(ciphertext: *mut TimelockCiphe
     if !ciphertext.is_null() {
         let ct = Box::from_raw(ciphertext);
         if !ct.data.is_null() {
+            // Since we use Box::into_raw on boxed slices, capacity always equals length
             let _ = Vec::from_raw_parts(ct.data, ct.len, ct.len);
         }
     }
@@ -333,10 +334,10 @@ pub unsafe extern "C" fn timelock_encrypt(
         return TimelockResult::SerializationError;
     }
 
-    // Allocate output
-    let data_ptr = serialized.as_mut_ptr();
-    let data_len = serialized.len();
-    std::mem::forget(serialized); // Transfer ownership to C
+    // Use Box::into_raw for safe ownership transfer to C
+    let boxed_data = serialized.into_boxed_slice();
+    let data_len = boxed_data.len();
+    let data_ptr = Box::into_raw(boxed_data) as *mut u8;
 
     let result = Box::new(TimelockCiphertext {
         data: data_ptr,

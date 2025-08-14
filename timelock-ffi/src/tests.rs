@@ -98,8 +98,9 @@ fn validate_size_estimation_overhead(msg_len: usize, estimated: usize) {
         // This threshold was chosen because the fixed cryptographic headers (188 bytes) dominate the overhead
         assert!(
             estimated < MAX_REASONABLE_OVERHEAD_BYTES,
-            "Estimated size {} is unreasonably large for very small message length {}",
+            "Estimated size {} exceeds the maximum allowed overhead ({} bytes) for very small message length {}",
             estimated,
+            MAX_REASONABLE_OVERHEAD_BYTES,
             msg_len
         );
     } else if msg_len < SMALL_MESSAGE_THRESHOLD {
@@ -373,12 +374,11 @@ fn test_memory_management() {
     // Test that we can create and free ciphertext structures
     // without memory leaks (this would be caught by tools like valgrind)
     
-    let mut data = vec![1u8; 100];
-    data.shrink_to_fit(); // Ensure capacity equals length
-    let data_ptr = data.as_mut_ptr();
-    let data_len = data.len();
-    std::mem::forget(data); // Transfer ownership
-    // Note: We use forget() rather than into_raw_parts() since the latter is still unstable
+    // Allocate buffer as Box<[u8]> for safe ownership transfer
+    let boxed_data: Box<[u8]> = vec![1u8; 100].into_boxed_slice();
+    let data_len = boxed_data.len();
+    let data_ptr = Box::into_raw(boxed_data) as *mut u8;
+    // Ownership of the buffer is now transferred; it must be properly freed later.
     
     let ciphertext = Box::new(TimelockCiphertext {
         data: data_ptr,
