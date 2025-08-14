@@ -67,6 +67,7 @@ int main() {
     // Or for a specific round:
     // curl https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971/public/2000 | jq .signature
     // The value here is the hex-encoded BLS signature for round 2000 as returned by the Drand QuickNet network.
+    // Last verified: August 14, 2025
     const char* signature_hex = "b6cb8f482a0b15d45936a4c4ea08e98a087e71787caee3f4d07a8a9843b1bc5423c6b3c22f446488b3137eaca799c77e";
 
     printf("Message: %s\n", message);

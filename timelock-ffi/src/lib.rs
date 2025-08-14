@@ -48,6 +48,13 @@ use timelock::{
 pub const BLS_G1_SIZE: usize = 48; // G1 compressed point size (BLS12-381 spec)
 pub const BLS_G2_SIZE: usize = 96; // G2 compressed point size (BLS12-381 spec)
 
+// AES-GCM constants
+pub const AES_GCM_IV_SIZE: usize = 12;  // AES-GCM initialization vector size (96 bits)
+// AES-GCM authentication tag size is standardized at 16 bytes per RFC 5116.
+// This constant ensures compatibility with the AES-GCM implementation and should
+// remain consistent with the underlying cryptographic library's tag size.
+pub const AES_GCM_TAG_SIZE: usize = 16;
+
 /// Runtime validation of cryptographic constants to ensure consistency with the underlying library.
 /// This function is called during initialization to verify that our hardcoded constants match
 /// the actual sizes reported by the cryptographic library.
@@ -79,7 +86,7 @@ fn validate_cryptographic_constants() -> Result<(), String> {
 // such as length prefixes, structure tags, and potential padding. The value of 32 was chosen based
 // on comprehensive analysis including protocol metadata and serialization format overhead observed 
 // in the current implementation. This value is kept consistent with test calculations to ensure
-// accurate size estimation and prevent buffer overflows or wasted space.
+// accurate size estimation and prevent buffer overflows and minimize wasted space.
 // This constant is validated in tests.rs to ensure it remains accurate.
 const SERIALIZATION_OVERHEAD: usize = 32;
 
@@ -369,11 +376,10 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // NOTE: The following constants are hardcoded based on the BLS12-381 curve specification and AES-GCM standard.
     // If the underlying cryptographic library or serialization format changes, these values MUST be reviewed and updated.
     // Dynamic calculation is NOT currently implemented; this function provides only an estimate based on current assumptions.
-    const AES_GCM_IV_SIZE: usize = 12;
-    // AES-GCM authentication tag size is standardized at 16 bytes per RFC 5116.
-    // This constant ensures compatibility with the AES-GCM implementation and should
-    // remain consistent with the underlying cryptographic library's tag size.
-    const AES_GCM_TAG_SIZE: usize = 16;
+    // This is due to the complexity and performance overhead of parsing and serializing all cryptographic components at runtime.
+    // At present, the overhead is stable given the fixed cryptographic primitives and serialization format.
+    // If future requirements demand more precise sizing (e.g., for streaming or variable-format support), dynamic calculation may be implemented.
+    // For now, maintainers should review this estimate if cryptographic primitives or serialization formats change.
     
     // Use the same overhead calculation as tests for consistency
     // This ensures that size estimates match the validation logic in tests

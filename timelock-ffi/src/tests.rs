@@ -22,7 +22,8 @@ use std::thread;
 use std::sync::Arc;
 
 // Test constants for overhead calculations
-use crate::{BLS_G1_SIZE, BLS_G2_SIZE};
+// Import shared constants from main library
+use crate::{BLS_G1_SIZE, BLS_G2_SIZE, AES_GCM_TAG_SIZE, AES_GCM_IV_SIZE};
 
 // Cryptographic overhead components (in bytes):
 // Note: Drand QuickNet uses the "bls-unchained-g1-rfc9380" scheme, which places
@@ -34,8 +35,19 @@ use crate::{BLS_G1_SIZE, BLS_G2_SIZE};
 // - Additional protocol metadata: 32 bytes (estimate)
 // - Serialization overhead: 32 bytes (estimate)
 // - Safety margin: 64 bytes (to account for future changes or unknowns)
-const AES_GCM_TAG_SIZE: usize = 16;
-const AES_GCM_NONCE_SIZE: usize = 12;
+
+// Use IV_SIZE as NONCE_SIZE (they are the same thing in AES-GCM)
+const AES_GCM_NONCE_SIZE: usize = AES_GCM_IV_SIZE;
+
+// Estimated size (in bytes) for protocol-level metadata fields.
+// This 32-byte estimate is intended to cover:
+// - Protocol version identifiers (e.g., 1–2 bytes)
+// - Message type or opcode fields (e.g., 1–2 bytes)
+// - Length prefixes or framing fields (e.g., 2–4 bytes)
+// - Reserved/extension fields for future protocol upgrades
+// - Any additional small fields required by the protocol (e.g., flags, status codes)
+// The value is intentionally conservative to accommodate possible future changes
+// or unanticipated metadata fields. Update as protocol details become more concrete.
 const PROTOCOL_METADATA_SIZE: usize = 32;
 const SERIALIZATION_OVERHEAD: usize = 32;
 const SAFETY_MARGIN: usize = 64;
@@ -380,10 +392,12 @@ fn test_memory_management() {
     // Test that we can create and free ciphertext structures
     // without memory leaks (this would be caught by tools like valgrind)
     
-    let data = vec![1u8; 100];
-    let data_ptr = data.as_ptr() as *mut u8;
+    let mut data = vec![1u8; 100];
+    data.shrink_to_fit(); // Ensure capacity equals length
+    let data_ptr = data.as_mut_ptr();
     let data_len = data.len();
     std::mem::forget(data); // Transfer ownership
+    // Note: We use forget() rather than into_raw_parts() since the latter is still unstable
     
     let ciphertext = Box::new(TimelockCiphertext {
         data: data_ptr,
