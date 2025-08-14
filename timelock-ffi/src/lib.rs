@@ -304,11 +304,12 @@ pub unsafe extern "C" fn timelock_encrypt(
     // Convert inputs
     let message_slice = slice::from_raw_parts(message, message_len);
     let identity_slice = slice::from_raw_parts(identity, identity_len);
-    let secret_key_slice = slice::from_raw_parts(secret_key, 32);
     
-    // Convert secret key to array
+    // Convert secret key to array directly to minimize exposure time
     let mut secret_key_array = [0u8; 32];
-    secret_key_array.copy_from_slice(secret_key_slice);
+    unsafe {
+        ptr::copy_nonoverlapping(secret_key, secret_key_array.as_mut_ptr(), 32);
+    }
 
     // Parse public key hex string
     let public_key_cstr = match CStr::from_ptr(public_key_hex).to_str() {
