@@ -64,13 +64,13 @@ const AES_GCM_CIPHERTEXT_SIZE: usize = 44;
 const LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE: usize = 49;
 
 /// Returns the maximum observed overhead multiplier, using ceiling division.
-const fn max_overhead_multiplier(aes_gcm_size: usize, secretbox_size: usize, min_msg_size: usize) -> usize {
+const fn calculate_max_overhead_multiplier(aes_gcm_size: usize, secretbox_size: usize, min_msg_size: usize) -> usize {
     let aes_gcm_mult = (aes_gcm_size + min_msg_size - 1) / min_msg_size;
     let secretbox_mult = (secretbox_size + min_msg_size - 1) / min_msg_size;
     if aes_gcm_mult > secretbox_mult { aes_gcm_mult } else { secretbox_mult }
 }
 
-const MAX_OVERHEAD_MULTIPLIER: usize = max_overhead_multiplier(
+const MAX_OVERHEAD_MULTIPLIER: usize = calculate_max_overhead_multiplier(
     AES_GCM_CIPHERTEXT_SIZE,
     LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE,
     MIN_MSG_SIZE,
@@ -597,7 +597,7 @@ fn test_decrypt_buffer_size_handling() {
     // Should fail due to invalid signature, but not crash due to small buffer
     assert!(result != TimelockResult::Success);
     
-    // boxed drops here automatically - no manual cleanup needed!
+    // boxed goes out of scope here, automatically dropping the allocation
 }
 
 #[test]

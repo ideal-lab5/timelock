@@ -366,9 +366,9 @@ pub unsafe extern "C" fn timelock_estimate_ciphertext_size(
     // - AES-GCM auth tag: 16 bytes
     // - Serialization overhead: 32 bytes (protocol metadata, length prefixes, etc.)
     // 
-    // Note: These hardcoded constants are based on the BLS12-381 curve specification and AES-GCM standard.
-    // They should be validated against actual serialization output if the underlying cryptographic library
-    // changes its serialization format. Consider implementing dynamic calculation for production use.
+    // NOTE: The following constants are hardcoded based on the BLS12-381 curve specification and AES-GCM standard.
+    // If the underlying cryptographic library or serialization format changes, these values MUST be reviewed and updated.
+    // Dynamic calculation is NOT currently implemented; this function provides only an estimate based on current assumptions.
     const AES_GCM_IV_SIZE: usize = 12;
     // AES-GCM authentication tag size is standardized at 16 bytes per RFC 5116.
     // This constant ensures compatibility with the AES-GCM implementation and should
