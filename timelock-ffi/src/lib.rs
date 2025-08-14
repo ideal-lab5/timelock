@@ -381,9 +381,11 @@ pub unsafe extern "C" fn timelock_encrypt(
     let boxed_data = serialized.into_boxed_slice();
     let data_len = boxed_data.len();
     // SAFETY: We cast Box<[u8]> to *mut u8 to transfer ownership to C.
-    // The length information is not lost, as it is stored in the `len` field
-    // of the TimelockCiphertext struct alongside the pointer. When freeing,
-    // both the pointer and length are available to reconstruct the Box<[u8]>.
+    // The slice pointer is cast to a raw u8 pointer for C compatibility, as C APIs
+    // expect simple byte pointers rather than slice metadata. The length information
+    // is not lost, as it is stored in the `len` field of the TimelockCiphertext struct
+    // alongside the pointer. When freeing, both the pointer and length are available
+    // to reconstruct the Box<[u8]> via Vec::from_raw_parts.
     let data_ptr = Box::into_raw(boxed_data) as *mut u8;
 
     let result = Box::new(TimelockCiphertext {

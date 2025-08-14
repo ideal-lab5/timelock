@@ -59,3 +59,4 @@ Please avoid flagging:
 - Existing comment verbosity or formatting (current level is intentional)
 - Minor import organization preferences (functional placement is acceptable)
 - Multiline comments that don't need conversion to doc comments
+- **STOP SUGGESTING MINOR NITPICKS** - Focus on substantial issues that affect correctness, safety, or maintainability, not stylistic preferences or micro-optimizations that don't provide meaningful value
