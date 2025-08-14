@@ -60,7 +60,6 @@ sudo dnf install gcc make
 ```
 
 
-
 #### macOS
 ```bash
 # Install Xcode Command Line Tools
