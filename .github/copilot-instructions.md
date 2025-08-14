@@ -38,6 +38,10 @@
 - Existing multiline comments are acceptable - don't require conversion to doc comments
 - Focus on substance over style for comment formatting
 - Import organization is flexible - functional placement is acceptable
+- Unit tests should be clear and concise - avoid excessive documentation in test modules
+- Test helper functions and constants typically don't need comprehensive doc comments
+- Tests are executable documentation - well-named tests with clear assertions are more valuable than verbose comments explaining what the code already demonstrates
+- Excessive test documentation creates maintenance burden without proportional benefit - tests should be self-documenting through good naming and structure
 
 ## Review Focus Areas
 Please focus code reviews on:

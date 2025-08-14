@@ -188,8 +188,11 @@ pub unsafe extern "C" fn timelock_ciphertext_free(ciphertext: *mut TimelockCiphe
     if !ciphertext.is_null() {
         let ct = Box::from_raw(ciphertext);
         if !ct.data.is_null() {
-            // Since we use Box::into_raw on boxed slices, capacity always equals length.
-            // If this ever changes, the following debug assertion will catch it in debug builds.
+            // SAFETY: The pointer `ct.data` is originally allocated via Box::into_raw(Box<[u8]>) in the
+            // corresponding allocation site. According to Rust documentation, converting a Box<[T]> into 
+            // a raw pointer and then reconstructing it with Vec::from_raw_parts using (ptr, len, len) 
+            // is valid because Box<[T]> is always allocated with capacity == length.
+            // If the allocation strategy ever changes, this debug assertion will catch it in debug builds.
             let vec = Vec::from_raw_parts(ct.data, ct.len, ct.len);
             debug_assert!(vec.capacity() == vec.len(), "Invariant broken: capacity != length for ciphertext buffer. This may indicate a change in allocation strategy.");
             // Dropping vec will free the memory.
@@ -368,6 +371,10 @@ pub unsafe extern "C" fn timelock_encrypt(
     // Use Box::into_raw for safe ownership transfer to C
     let boxed_data = serialized.into_boxed_slice();
     let data_len = boxed_data.len();
+    // SAFETY: We cast Box<[u8]> to *mut u8 to transfer ownership to C.
+    // The length information is not lost, as it is stored in the `len` field
+    // of the TimelockCiphertext struct alongside the pointer. When freeing,
+    // both the pointer and length are available to reconstruct the Box<[u8]>.
     let data_ptr = Box::into_raw(boxed_data) as *mut u8;
 
     let result = Box::new(TimelockCiphertext {
