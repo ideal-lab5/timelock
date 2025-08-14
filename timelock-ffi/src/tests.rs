@@ -68,8 +68,24 @@ const MAX_OVERHEAD_BYTES: usize =
 // due to unexpected overhead in edge cases. Update these values if future measurements indicate a
 // different upper bound.
 //
-// IMPORTANT: These values should be periodically re-validated, especially after updating
-// cryptographic libraries or dependencies, as overhead may change with new versions or implementations.
+// IMPORTANT: These values should be periodically re-validated to ensure they accurately reflect
+// the maximum observed overhead. Re-validation should be performed:
+// - After updating cryptographic libraries or dependencies (e.g., AES-GCM, libsodium).
+// - When changing the implementation of encryption routines.
+// - Periodically, as part of routine maintenance or security review.
+// - If tests fail due to unexpected ciphertext size or overhead.
+//
+// To re-validate:
+// 1. Encrypt a 1-byte payload using each supported cryptographic backend (e.g., AES-GCM, libsodium secretbox).
+// 2. Measure the resulting ciphertext size for each backend.
+// 3. Update AES_GCM_CIPHERTEXT_SIZE and LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE to the maximum observed values.
+// 4. Ensure that MAX_OVERHEAD_MULTIPLIER is set to the highest ratio (ciphertext size / plaintext size), rounded up.
+// 5. If any observed ciphertext size exceeds the current constants, update the constants and re-run all tests.
+//
+// Indicators that values need updating:
+// - Observed ciphertext sizes in tests exceed the hardcoded constants.
+// - Release notes or documentation for cryptographic libraries mention changes to overhead or output format.
+// - New cryptographic backends are added to the codebase.
 const MIN_MSG_SIZE: usize = 1;
 const AES_GCM_CIPHERTEXT_SIZE: usize = 44;
 const LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE: usize = 49;

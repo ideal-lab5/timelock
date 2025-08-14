@@ -192,9 +192,10 @@ pub unsafe extern "C" fn timelock_ciphertext_free(ciphertext: *mut TimelockCiphe
             // corresponding allocation site. According to Rust documentation, converting a Box<[T]> into 
             // a raw pointer and then reconstructing it with Vec::from_raw_parts using (ptr, len, len) 
             // is valid because Box<[T]> is always allocated with capacity == length.
-            // If the allocation strategy ever changes, this debug assertion will catch it in debug builds.
+            // This debug assertion validates this Box<[T]> invariant in debug builds and will detect
+            // if the allocation strategy changes in future Rust versions or if memory corruption occurs.
             let vec = Vec::from_raw_parts(ct.data, ct.len, ct.len);
-            debug_assert!(vec.capacity() == vec.len(), "Invariant broken: capacity != length for ciphertext buffer. This may indicate a change in allocation strategy.");
+            debug_assert!(vec.capacity() == vec.len(), "Box<[T]> invariant broken: capacity != length for ciphertext buffer. This indicates either memory corruption or a change in Rust's Box<[T]> allocation strategy.");
             // Dropping vec will free the memory.
         }
     }
