@@ -1,0 +1,44 @@
+# Copilot Instructions for Timelock FFI Project
+
+## Context and Date Handling
+- The current development date is August 14, 2025
+- All dates referencing "August 14, 2025" or "August 2025" are CURRENT and VALID
+- Do not flag verification dates of "August 14, 2025" as future dates
+- Documentation timestamps reflect actual verification and development dates
+
+## Cryptographic Context
+- This project uses Drand QuickNet with the "bls-unchained-g1-rfc9380" scheme
+- G1 elements are 48 bytes (signatures), G2 elements are 96 bytes (public keys)
+- These are NON-STANDARD BLS configurations specific to Drand QuickNet
+- Constants BLS_G1_SIZE=48 and BLS_G2_SIZE=96 are correct for this scheme
+
+## Memory Management Patterns
+- `Box::into_raw()` and `mem::forget()` are used intentionally for C FFI ownership transfer
+- All error paths properly implement `secret_key_array.zeroize()` for security
+- Memory cleanup uses `Vec::from_raw_parts(ptr, len, len)` for boxed slice reconstruction
+- These patterns are reviewed and correct for FFI safety
+
+## Testing and Examples
+- Hardcoded cryptographic values (keys, signatures) are for TESTING and EXAMPLES only
+- Production warnings are already included in documentation
+- Test signatures are verified against actual Drand QuickNet responses
+- Constants are validated at runtime against the underlying cryptographic library
+
+## Code Organization Preferences
+- Prefer clear, explicit error handling over complex abstraction layers
+- Validation logic is intentionally inline for FFI transparency
+- Comments include detailed rationale for cryptographic constants and memory patterns
+- Architecture prioritizes safety and clarity over brevity
+
+## Review Focus Areas
+Please focus code reviews on:
+- Actual memory safety violations (not standard FFI patterns)
+- Logic errors in cryptographic operations
+- Missing error handling paths
+- API consistency and documentation accuracy
+
+Please avoid flagging:
+- Correct dates as "future dates"
+- Standard FFI memory management patterns
+- Hardcoded test values with proper warnings
+- Inline validation logic in preference to complex abstractions

@@ -92,10 +92,19 @@ fn validate_cryptographic_constants() -> Result<(), String> {
 
 // The serialization overhead constant accounts for additional bytes used in encoding structures,
 // such as length prefixes, structure tags, and potential padding. The value of 32 was chosen based
-// on comprehensive analysis including protocol metadata and serialization format overhead observed 
+// on comprehensive analysis including protocol metadata and serialization format overhead observed
 // in the current implementation. This value is kept consistent with test calculations to ensure
 // accurate size estimation and prevent buffer overflows and minimize wasted space.
-// This constant is validated in tests.rs to ensure it remains accurate.
+// such as length prefixes, structure tags, and potential padding.
+// The value of 32 was determined by summing the maximum observed overhead from:
+// - 4 bytes for length prefix (u32)
+// - 1–2 bytes for structure tags or enum discriminants
+// - up to 16 bytes for protocol metadata (e.g., versioning, type tags)
+// - remaining bytes for alignment/padding and future-proofing
+// This value was chosen based on analysis of the current serialization format (ark-serialize and protocol metadata)
+// and is validated in tests.rs to ensure it remains accurate.
+// **Update this value if the serialization format changes, new fields are added to encoded structures,
+// or if protocol metadata overhead increases.**
 const SERIALIZATION_OVERHEAD: usize = 32;
 
 // This FFI currently supports only TinyBLS381 (Drand QuickNet beacon).
