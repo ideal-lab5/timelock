@@ -92,7 +92,18 @@ const MOCK_DATA_SIZE: usize = 100;
 // Constants for message size boundary testing
 const VERY_SMALL_MESSAGE_THRESHOLD: usize = 4; // Messages <= 4 bytes use fixed overhead check
 const SMALL_MESSAGE_THRESHOLD: usize = 128; // Messages < 128 bytes use multiplier check
-const MAX_REASONABLE_OVERHEAD_BYTES: usize = 500; // Maximum reasonable overhead for very small messages
+
+/// Maximum reasonable overhead for very small messages (1-4 bytes).
+/// 
+/// This is derived from the sum of the core timelock ciphertext overhead,
+/// protocol metadata, and a safety margin, matching the calculation for
+/// MAX_OVERHEAD_BYTES. An additional margin is included to account for
+/// any unanticipated fixed-size headers or future protocol changes.
+/// Update this if cryptographic or protocol overheads change.
+const MAX_REASONABLE_OVERHEAD_BYTES: usize = 
+    TIMELOCK_CIPHERTEXT_OVERHEAD +
+    PROTOCOL_METADATA_SIZE +
+    SAFETY_MARGIN;
 
 const DRAND_QUICKNET_PK_HEX: &str = "83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a";
 
