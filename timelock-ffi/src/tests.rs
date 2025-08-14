@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-// Drand Quicknet production public key for testing and examples.
-// This is the production Quicknet chain public key from api.drand.sh.
-// Chain ID: 52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
-//
-// Source: https://api.drand.sh/info (Quicknet chain public key)
-// Chain ID: 52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
-// Public key (hex): 83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a
-//
-// Validity period: This key is valid as long as the Drand Quicknet chain remains active and the public key is not rotated.
-// Always verify the current public key at https://api.drand.sh/info before use.
-//
-// Intended use: TESTING ONLY. This key is hardcoded for use in test code and examples.
-// DO NOT USE THIS KEY IN PRODUCTION. Always fetch and verify the current production key from the official Drand API.
-
 //! Comprehensive tests for the timelock FFI bindings
+//! 
+//! # Drand Quicknet Production Public Key
+//! 
+//! This module uses the production Quicknet chain public key from api.drand.sh for testing and examples.
+//! 
+//! **Chain ID:** 52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971
+//! 
+//! **Source:** https://api.drand.sh/info (Quicknet chain public key)
+//! 
+//! **Public key (hex):** 83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a
+//! 
+//! **Validity period:** This key is valid as long as the Drand Quicknet chain remains active and the public key is not rotated.
+//! Always verify the current public key at https://api.drand.sh/info before use.
+//! 
+//! **Intended use:** TESTING ONLY. This key is hardcoded for use in test code and examples.
+//! DO NOT USE THIS KEY IN PRODUCTION. Always fetch and verify the current production key from the official Drand API.
 
 use super::*;
 use std::ffi::CString;
@@ -75,6 +77,10 @@ const LIBSODIUM_SECRETBOX_CIPHERTEXT_SIZE: usize = 49;
 /// Returns the maximum observed overhead multiplier, using ceiling division.
 const fn calculate_max_overhead_multiplier(aes_gcm_size: usize, secretbox_size: usize, min_msg_size: usize) -> usize {
     // Manual ceiling division: (a + b - 1) / b
+    // Rust does not provide a built-in integer ceiling division function, and
+    // floating-point division or external crates are not available in const fn.
+    // Therefore, we use this manual formula to compute the ceiling of integer division
+    // in a way that is compatible with const evaluation.
     let aes_gcm_mult = (aes_gcm_size + min_msg_size - 1) / min_msg_size;
     let secretbox_mult = (secretbox_size + min_msg_size - 1) / min_msg_size;
     if aes_gcm_mult > secretbox_mult { aes_gcm_mult } else { secretbox_mult }

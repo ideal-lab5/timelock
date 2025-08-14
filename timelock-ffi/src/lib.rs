@@ -50,8 +50,8 @@ use timelock::{
 // BLS12-381 curve element sizes, as defined by the BLS12-381 specification:
 // - G1 compressed point: 48 bytes  
 // - G2 compressed point: 96 bytes
-// See: IETF draft-irtf-cfrg-pairing-friendly-curves-09, Section 4.3.3
-// (https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-09#section-4.3.3)
+// See: RFC 9380, Section 4.3.3
+// (https://datatracker.ietf.org/doc/html/rfc9380#section-4.3.3)
 // These constants are also validated in tests.rs and at runtime to ensure they match
 // the actual compressed_size() values returned by the ark-bls12-381 library.
 // If the library changes its serialization format, the tests will fail,
@@ -188,8 +188,11 @@ pub unsafe extern "C" fn timelock_ciphertext_free(ciphertext: *mut TimelockCiphe
     if !ciphertext.is_null() {
         let ct = Box::from_raw(ciphertext);
         if !ct.data.is_null() {
-            // Since we use Box::into_raw on boxed slices, capacity always equals length
-            let _ = Vec::from_raw_parts(ct.data, ct.len, ct.len);
+            // Since we use Box::into_raw on boxed slices, capacity always equals length.
+            // If this ever changes, the following debug assertion will catch it in debug builds.
+            let vec = Vec::from_raw_parts(ct.data, ct.len, ct.len);
+            debug_assert!(vec.capacity() == vec.len(), "Invariant broken: capacity != length for ciphertext buffer. This may indicate a change in allocation strategy.");
+            // Dropping vec will free the memory.
         }
     }
 }
@@ -244,7 +247,18 @@ pub unsafe extern "C" fn timelock_create_drand_identity(
 ///
 /// # Returns
 /// `TimelockResult::Success` on success, error code on failure
-///
+
+/// Helper function to ensure sensitive data is always cleared on error paths
+fn fail_with_zeroize(
+    secret_key_array: &mut [u8; 32],
+    error_message: &str,
+    result_code: TimelockResult,
+) -> TimelockResult {
+    secret_key_array.zeroize();
+    set_last_error(error_message);
+    result_code
+}
+
 /// # Safety
 /// - All pointer parameters must be valid
 /// - `message` must point to `message_len` bytes
@@ -288,20 +302,22 @@ pub unsafe extern "C" fn timelock_encrypt(
     let public_key_cstr = match CStr::from_ptr(public_key_hex).to_str() {
         Ok(s) => s,
         Err(e) => {
-            // Zero out sensitive data before returning
-            secret_key_array.zeroize();
-            set_last_error(&format!("Invalid UTF-8 in public key hex string: {}", e));
-            return TimelockResult::InvalidInput;
+            return fail_with_zeroize(
+                &mut secret_key_array,
+                &format!("Invalid UTF-8 in public key hex string: {}", e),
+                TimelockResult::InvalidInput,
+            );
         }
     };
 
     let public_key_bytes = match hex::decode(public_key_cstr) {
         Ok(bytes) => bytes,
         Err(e) => {
-            // Zero out sensitive data before returning
-            secret_key_array.zeroize();
-            set_last_error(&format!("Invalid hex encoding in public key: {}", e));
-            return TimelockResult::InvalidPublicKey;
+            return fail_with_zeroize(
+                &mut secret_key_array,
+                &format!("Invalid hex encoding in public key: {}", e),
+                TimelockResult::InvalidPublicKey,
+            );
         }
     };
 
@@ -310,10 +326,11 @@ pub unsafe extern "C" fn timelock_encrypt(
     ) {
         Ok(pk) => pk,
         Err(e) => {
-            // Securely zero out sensitive data before returning
-            secret_key_array.zeroize();
-            set_last_error(&format!("Failed to deserialize BLS public key: {:?}", e));
-            return TimelockResult::InvalidPublicKey;
+            return fail_with_zeroize(
+                &mut secret_key_array,
+                &format!("Failed to deserialize BLS public key: {:?}", e),
+                TimelockResult::InvalidPublicKey,
+            );
         }
     };
 
@@ -330,10 +347,11 @@ pub unsafe extern "C" fn timelock_encrypt(
     ) {
         Ok(ct) => ct,
         Err(e) => {
-            // Securely zero out sensitive data before returning
-            secret_key_array.zeroize();
-            set_last_error(&format!("Timelock encryption operation failed: {:?}", e));
-            return TimelockResult::EncryptionFailed;
+            return fail_with_zeroize(
+                &mut secret_key_array,
+                &format!("Timelock encryption operation failed: {:?}", e),
+                TimelockResult::EncryptionFailed,
+            );
         }
     };
 

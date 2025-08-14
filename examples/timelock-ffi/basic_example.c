@@ -69,8 +69,8 @@ int main() {
     // The value here is the hex-encoded BLS signature for round 2000 as returned by the Drand QuickNet network.
     // Last verified: August 14, 2025
     /*
-     * WARNING: This signature is hardcoded for demonstration purposes only.
-     * Do NOT use hardcoded cryptographic signatures in production code.
+     * WARNING: This is a hardcoded test signature for demo purposes only.
+     * In production, fetch the actual signature from the Drand API for your specific round.
      * Verification date: August 14, 2025
      */
     const char* signature_hex = "b6cb8f482a0b15d45936a4c4ea08e98a087e71787caee3f4d07a8a9843b1bc5423c6b3c22f446488b3137eaca799c77e";

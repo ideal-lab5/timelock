@@ -23,6 +23,8 @@
 - Production warnings are already included in documentation
 - Test signatures are verified against actual Drand QuickNet responses
 - Constants are validated at runtime against the underlying cryptographic library
+- Demo code should have reasonable warnings, not excessive security theater
+- Example applications use public test data (Drand signatures) which pose minimal risk
 
 ## Code Organization Preferences
 - Prefer clear, explicit error handling over complex abstraction layers

@@ -144,8 +144,8 @@ int main() {
         // curl https://api.drand.sh/52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971/public/1000 | jq .signature
         // See the Drand API documentation for more details: https://drand.love/docs/http-api/
         // Last verified: August 14, 2025
-        // WARNING: This hardcoded signature is for demonstration purposes only and MUST NOT be used in production.
-        // Always obtain and verify the correct signature for your use case.
+        // WARNING: This is a hardcoded test signature for demo purposes only.
+        // In production, fetch the actual signature from the Drand API for your specific round.
         const std::string signature_hex = "b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342b73a8dd2bacbe47e4b6b63ed5e39";
         
         std::cout << "Cryptographic Parameters:" << std::endl;
