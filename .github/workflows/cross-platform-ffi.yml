@@ -1,0 +1,85 @@
+# Cross-platform FFI testing via CMake
+name: FFI Cross-Platform Build
+
+on:
+  push:
+    paths: 
+      - 'timelock-ffi/**'
+      - 'examples/timelock-ffi/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  pull_request:
+    paths:
+      - 'timelock-ffi/**' 
+      - 'examples/timelock-ffi/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+
+jobs:
+  test-cross-platform:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake pkg-config
+    
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install cmake pkg-config
+    
+    - name: Install system dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install cmake
+    
+    - name: Run Rust core library tests
+      run: |
+        cd timelock
+        cargo test --verbose
+    
+    - name: Run Rust FFI binding tests  
+      run: |
+        cd timelock-ffi
+        cargo test --verbose
+    
+    - name: Build and test via CMake
+      run: |
+        cd examples/timelock-ffi
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build . --config Release
+    
+    - name: Run C example
+      run: |
+        cd examples/timelock-ffi/build
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          ./bin/Release/basic_example.exe
+        else
+          ./bin/basic_example
+        fi
+      shell: bash
+    
+    - name: Run C++ example
+      run: |
+        cd examples/timelock-ffi/build
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          ./bin/Release/basic_cpp_example.exe
+        else
+          ./bin/basic_cpp_example
+        fi
+      shell: bash

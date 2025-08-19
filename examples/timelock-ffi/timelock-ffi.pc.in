@@ -1,0 +1,13 @@
+# pkg-config file for timelock-ffi
+# This file should be installed to /usr/lib/pkgconfig/ or similar
+
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: timelock-ffi
+Description: C-compatible FFI bindings for timelock encryption
+Version: @VERSION@
+Libs: -L${libdir} -ltimelock_ffi
+Cflags: -I${includedir}
