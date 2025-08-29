@@ -15,18 +15,14 @@
  */
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use codec::Encode;
-use serde::{Deserialize, Serialize};
 use timelock::{
 	block_ciphers::{AESGCMBlockCipherProvider, AESOutput, BlockCipherProvider},
-	engines::{EngineBLS, drand::TinyBLS381},
+	engines::{drand::TinyBLS381, EngineBLS},
 	ibe::fullident::Identity,
-	tlock::{TLECiphertext, tld as timelock_decrypt, tle as timelock_encrypt},
+	tlock::{tld as timelock_decrypt, tle as timelock_encrypt, TLECiphertext},
 };
 
-use getrandom::getrandom;
 use rand_chacha::{rand_core::SeedableRng, ChaCha20Rng};
-use ark_std::rand::RngCore;
 use wasm_bindgen::prelude::*;
 
 type R = ChaCha20Rng;
@@ -38,15 +34,8 @@ fn convert_from_bytes<E: CanonicalDeserialize, const N: usize>(bytes: &[u8; N]) 
 
 fn get_rng() -> Result<ChaCha20Rng, JsError> {
 	let mut seed = [0u8; 32];
-	getrandom(&mut seed).map_err(|e| JsError::new(&format!("RNG failed: {:?}", e)))?;
+	getrandom::getrandom(&mut seed).map_err(|e| JsError::new(&format!("RNG failed: {:?}", e)))?;
 	Ok(ChaCha20Rng::from_seed(seed))
-}
-
-/// Supported Beacon Types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum SupportedCurve {
-	Bls12_381,
 }
 
 /// The encrypt wrapper used by the WASM blob to call tlock.rs encrypt function
@@ -56,20 +45,15 @@ pub enum SupportedCurve {
 ///   later on.
 /// * `p_pub_js`: the public key commitment for the IBE system
 /// * `
+// #[wasm_bindgen]
 #[wasm_bindgen]
 pub fn tle(
 	id_js: JsValue,
 	message_js: JsValue,
 	sk_js: JsValue,
 	p_pub_js: JsValue,
-	supported_curve_js: JsValue,
 ) -> Result<JsValue, JsError> {
-	let curve: SupportedCurve = serde_wasm_bindgen::from_value(supported_curve_js.clone())
-		.map_err(|_| JsError::new("could not decode the curve type"))?;
-
-	match curve {
-		SupportedCurve::Bls12_381 => do_tle::<TinyBLS381>(id_js, message_js, sk_js, p_pub_js),
-	}
+	do_tle::<TinyBLS381>(id_js, message_js, sk_js, p_pub_js)
 }
 
 pub fn do_tle<E: EngineBLS>(
@@ -119,17 +103,8 @@ pub fn do_tle<E: EngineBLS>(
 /// * `sig_vec_js`: The array of BLS signatures required to rebuild the secret
 ///   key and decrypt the message
 #[wasm_bindgen]
-pub fn tld(
-	ciphertext_js: JsValue,
-	sig_vec_js: JsValue,
-	supported_curve_js: JsValue,
-) -> Result<JsValue, JsError> {
-	let curve: SupportedCurve = serde_wasm_bindgen::from_value(supported_curve_js.clone())
-		.map_err(|_| JsError::new("could not decode the curve type"))?;
-
-	match curve {
-		SupportedCurve::Bls12_381 => do_tld::<TinyBLS381>(ciphertext_js, sig_vec_js),
-	}
+pub fn tld(ciphertext_js: JsValue, sig_vec_js: JsValue) -> Result<JsValue, JsError> {
+	do_tld::<TinyBLS381>(ciphertext_js, sig_vec_js)
 }
 
 /// Timelock decryption
@@ -152,17 +127,8 @@ fn do_tld<E: EngineBLS>(ciphertext_js: JsValue, sig_vec_js: JsValue) -> Result<J
 }
 
 #[wasm_bindgen]
-pub fn decrypt(
-	ciphertext_js: JsValue,
-	sk_vec_js: JsValue,
-	supported_curve_js: JsValue,
-) -> Result<JsValue, JsError> {
-	let curve: SupportedCurve = serde_wasm_bindgen::from_value(supported_curve_js.clone())
-		.map_err(|_| JsError::new("could not decode the curve type"))?;
-
-	match curve {
-		SupportedCurve::Bls12_381 => do_decrypt::<TinyBLS381>(ciphertext_js, sk_vec_js),
-	}
+pub fn decrypt(ciphertext_js: JsValue, sk_vec_js: JsValue) -> Result<JsValue, JsError> {
+	do_decrypt::<TinyBLS381>(ciphertext_js, sk_vec_js)
 }
 
 /// Bypass Tlock by attempting to decrypt the ciphertext with some secret key
@@ -197,11 +163,11 @@ pub fn do_decrypt<E: EngineBLS>(
 #[cfg(test)]
 mod test {
 	use super::*;
-	use ard_std::rand::rngs::OsRng;
-	use sha2::Digest;
-	// use crate::engines::Engine;
+	use ark_ec::PrimeGroup;
+	use ark_std::{ops::Mul, rand::rngs::OsRng, UniformRand};
 	use wasm_bindgen_test::*;
 
+	#[derive(Debug)]
 	enum TestStatusReport {
 		EncryptSuccess { ciphertext: JsValue },
 		DecryptSuccess { plaintext: JsValue },
@@ -211,24 +177,10 @@ mod test {
 
 	/// This function is used purely for testing purposes.
 	/// It takes in a seed and generates a secret key and public params
-	fn generate_keys<E: EngineBLS>(seed: JsValue) -> ([u8; 96], [u8; 32]) {
-		let seed_vec: Vec<u8> = serde_wasm_bindgen::from_value(seed).unwrap();
-		let seed_vec = seed_vec.as_slice();
-
-		let mut hasher = sha2::Sha256::default();
-		hasher.update(seed_vec);
-		let hash = hasher.finalize();
-		let keypair = w3f_bls::KeypairVT::<E>::generate(&mut OsRng);
-
-		let sk_gen: <E as EngineBLS>::Scalar = keypair.secret.0;
-
+	fn generate_keys<E: EngineBLS>() -> ([u8; 96], [u8; 32]) {
 		let sk = E::Scalar::rand(&mut OsRng);
 		let pk = E::PublicKeyGroup::generator().mul(sk);
 
-		// let double_public: DoublePublicKey<E> = DoublePublicKey(
-		// 	keypair.into_public_key_in_signature_group().0,
-		// 	keypair.public.0,
-		// );
 		let mut sk_bytes = Vec::new();
 		sk.serialize_compressed(&mut sk_bytes).unwrap();
 		let mut public_bytes = Vec::new();
@@ -242,15 +194,11 @@ mod test {
 		message: Vec<u8>,
 		succesful_decrypt: bool,
 		standard_tle: bool,
-		beacon: &str,
 		handler: &dyn Fn(TestStatusReport) -> (),
 	) {
-		let seed_bytes = "seeeeeeed".as_bytes();
-		let seed = serde_wasm_bindgen::to_value(seed_bytes).unwrap();
-
-		let (p_pub, sk) = generate_keys::<E>(seed);
+		let (p_pub, sk) = generate_keys::<E>();
 		let mut sk_js: JsValue = serde_wasm_bindgen::to_value(sk.as_slice()).unwrap();
-		let p_pub_js: JsValue = serde_wasm_bindgen::to_value(&p_pub).unwrap();
+		let p_pub_js: JsValue = serde_wasm_bindgen::to_value(p_pub.as_slice()).unwrap();
 
 		let identity_js: JsValue = serde_wasm_bindgen::to_value(&identity_vec).unwrap();
 		let message_js: JsValue = serde_wasm_bindgen::to_value(&message).unwrap();
@@ -270,7 +218,6 @@ mod test {
 			let bad_sig: E::SignatureGroup = bad_ident.extract::<E>(msk).0;
 			let bad_sig_vec = vec![bad_sig];
 			bad_sig_vec.serialize_compressed(&mut sig_bytes).unwrap();
-
 			// this portion (intentionally) corrupts the decryption result for
 			// early decryption
 			sk_js = serde_wasm_bindgen::to_value([1; 32].as_slice()).unwrap();
@@ -279,11 +226,11 @@ mod test {
 		let sig_vec_js: JsValue = serde_wasm_bindgen::to_value(&sig_bytes).unwrap();
 
 		if standard_tle {
-			match tle(identity_js, message_js, sk_js, p_pub_js, beacon.into()) {
+			match tle(identity_js, message_js, sk_js, p_pub_js) {
 				Ok(ciphertext) => {
 					let ciphertext_clone = ciphertext.clone();
 					handler(TestStatusReport::EncryptSuccess { ciphertext });
-					match tld(ciphertext_clone, sig_vec_js, beacon.into()) {
+					match tld(ciphertext_clone, sig_vec_js) {
 						Ok(plaintext) => handler(TestStatusReport::DecryptSuccess { plaintext }),
 						Err(error) => handler(TestStatusReport::DecryptFailure { _error: error }),
 					}
@@ -291,11 +238,11 @@ mod test {
 				Err(error) => handler(TestStatusReport::EncryptFailure { _error: error }),
 			}
 		} else {
-			match tle(identity_js, message_js, sk_js.clone(), p_pub_js, beacon.into()) {
+			match tle(identity_js, message_js, sk_js.clone(), p_pub_js) {
 				Ok(ciphertext) => {
 					let ciphertext_clone = ciphertext.clone();
 					handler(TestStatusReport::EncryptSuccess { ciphertext });
-					match decrypt(ciphertext_clone, sk_js, beacon.into()) {
+					match decrypt(ciphertext_clone, sk_js) {
 						Ok(plaintext) => handler(TestStatusReport::DecryptSuccess { plaintext }),
 						Err(error) => handler(TestStatusReport::DecryptFailure { _error: error }),
 					}
@@ -307,46 +254,34 @@ mod test {
 
 	#[wasm_bindgen_test]
 	pub fn can_encrypt_decrypt_drand() {
-		can_encrypt_decrypt::<TinyBLS381>("drand");
+		can_encrypt_decrypt::<TinyBLS381>();
 	}
 
-	pub fn can_encrypt_decrypt<E: EngineBLS>(beacon_type: &str) {
+	pub fn can_encrypt_decrypt<E: EngineBLS>() {
 		let message: Vec<u8> = b"this is a test message".to_vec();
 		let id: Vec<u8> = b"testing purposes".to_vec();
-		setup_test::<E>(
-			id,
-			message.clone(),
-			true,
-			true,
-			beacon_type,
-			&|status: TestStatusReport| match status {
-				TestStatusReport::EncryptSuccess { ciphertext } => {
-					let ciphertext_convert: Vec<u8> =
-						serde_wasm_bindgen::from_value(ciphertext.clone()).unwrap();
-					assert!(ciphertext.is_truthy());
-					assert_ne!(ciphertext_convert, message);
-				},
-				TestStatusReport::DecryptSuccess { plaintext } => {
-					let plaintext_convert: Vec<u8> =
-						serde_wasm_bindgen::from_value(plaintext.clone()).unwrap();
-					assert_eq!(plaintext_convert, message);
-				},
-				_ => panic!("The ciphertext is falsy"),
+		setup_test::<E>(id, message.clone(), true, true, &|status: TestStatusReport| match status {
+			TestStatusReport::EncryptSuccess { ciphertext } => {
+				let ciphertext_convert: Vec<u8> =
+					serde_wasm_bindgen::from_value(ciphertext.clone()).unwrap();
+				assert!(ciphertext.is_truthy());
+				assert_ne!(ciphertext_convert, message);
 			},
-		)
-	}
-
-	#[wasm_bindgen_test]
-	pub fn can_encrypt_decrypt_early_ideal() {
-		can_encrypt_decrypt_early::<TinyBLS377>("ideal");
+			TestStatusReport::DecryptSuccess { plaintext } => {
+				let plaintext_convert: Vec<u8> =
+					serde_wasm_bindgen::from_value(plaintext.clone()).unwrap();
+				assert_eq!(plaintext_convert, message);
+			},
+			_ => panic!("The ciphertext is falsy: {:?}", status),
+		})
 	}
 
 	#[wasm_bindgen_test]
 	pub fn can_encrypt_decrypt_early_drand() {
-		can_encrypt_decrypt_early::<TinyBLS381>("drand");
+		can_encrypt_decrypt_early::<TinyBLS381>();
 	}
 
-	pub fn can_encrypt_decrypt_early<E: EngineBLS>(beacon_type: &str) {
+	pub fn can_encrypt_decrypt_early<E: EngineBLS>() {
 		let message: Vec<u8> = b"this is a test message".to_vec();
 		let id: Vec<u8> = b"testing purposes".to_vec();
 		setup_test::<E>(
@@ -354,7 +289,6 @@ mod test {
 			message.clone(),
 			true,
 			false,
-			beacon_type.into(),
 			&|status: TestStatusReport| match status {
 				TestStatusReport::EncryptSuccess { ciphertext } => {
 					let ciphertext_convert: Vec<u8> =

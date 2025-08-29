@@ -2,7 +2,6 @@
 members = ["timelock", "wasm", "timelock-ffi"]
 resolver = "2"
 
-
 [workspace.package]
 edition = "2021"
 authors = ["Ideal Labs <hello@idealabs.network>"]

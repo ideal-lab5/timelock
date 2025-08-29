@@ -1,6 +1,6 @@
 [project]
 name = "timelock"
-version = "0.0.1-dev"
+version = "0.0.2-dev"
 authors = [
   { name="Ideal Labs", email="hello@idealabs.network" },
 ]
