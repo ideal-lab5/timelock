@@ -45,7 +45,6 @@ fn get_rng() -> Result<ChaCha20Rng, JsError> {
 ///   later on.
 /// * `p_pub_js`: the public key commitment for the IBE system
 /// * `
-// #[wasm_bindgen]
 #[wasm_bindgen]
 pub fn tle(
 	id_js: JsValue,
