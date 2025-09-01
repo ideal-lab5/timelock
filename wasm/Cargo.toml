@@ -20,6 +20,7 @@ wasm-opt = false
 [dependencies]
 codec.workspace = true
 rand_chacha.workspace = true
+rand.workspace = true
 timelock.workspace = true
 serde.workspace = true
 serde-wasm-bindgen.workspace = true

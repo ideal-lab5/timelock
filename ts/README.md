@@ -1,6 +1,6 @@
 # Timelock Encyrption TypeScript Wrapper
 
-This is a typescript library for timelock encryption. It is a "thin" wrapper that calls the WebAssembly (WASM) implementation of timelock encryption. It is designed for use in web-based environments and easily integrates with frameworks like React, Vue, etc. The library supports both the experiemental [Ideal Network beacon](https://docs.idealabs.network) as well as [Drand's](https://drand.love) Quicknet.
+This is a typescript library for timelock encryption. It is a "thin" wrapper that calls the WebAssembly (WASM) implementation of timelock encryption. It is designed for use in web-based environments and easily integrates with frameworks like React, Vue, etc. The library supports [Drand's](https://drand.love) Quicknet.
 
 ## Installation
 
@@ -53,7 +53,7 @@ Messages can be encrypted for future rounds of a supported beacon's protocol by 
 
 ``` js
 // import a pre-defined IdentityHandler implementation or create your own
-import { Timelock, IdealNetworkIdentityHandler } from '@ideallabs/timelock.js'
+import { Timelock, DrandIdentityHandler } from '@ideallabs/timelock.js'
 
 import hkdf from 'js-crypto-hkdf'
 // 1. Setup parameters for encryption
@@ -76,7 +76,7 @@ const pubkey =
 const roundNumber = 10
 
 // 2. Encrypt the message
-let ct = await timelockIdeal.encrypt(
+let ct = await Timelock.encrypt(
   encodedMessage,
   roundNumber,
   DrandIdentityBuilder,

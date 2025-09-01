@@ -15,5 +15,4 @@
  */
 
 export * from './timelock'
-export { IdentityBuilder } from './interfaces/IIdentityBuilder'
 export { DrandIdentityBuilder } from './interfaces/DrandIdentityBuilder'

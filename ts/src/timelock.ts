@@ -33,14 +33,6 @@ export enum TimelockErrors {
 }
 
 /**
- * Curves supported by the timelock library
- */
-export enum SupportedCurve {
-  BLS12_377 = 'bls12_377',
-  BLS12_381 = 'bls12_381'
-}
-
-/**
  * A wrapper type to handle generic results 
  */
 export type Result<T> = T | Error
@@ -64,26 +56,19 @@ export class Timelock {
   private wasmReady: boolean
 
   /**
-   * The curve used by the beacon
-   */
-  public curveId: SupportedCurve
-
-  /**
    * A private constructor to enforce usage of `build`
    */
-  private constructor(curveId: SupportedCurve) {
-    this.curveId = curveId
+  private constructor() {
     this.wasmReady = false
   }
 
   /**
    * Loads the wasm and constructs a new Timelock instance
-   * @param curveId: The curve used by the beacon 
    * @returns A Timelock instance
    */
-  public static async build(curveId: SupportedCurve) {
+  public static async build() {
     await init()
-    return new Timelock(curveId)
+    return new Timelock()
   }
 
   /**
@@ -108,7 +93,7 @@ export class Timelock {
       const beaconPublicKey = u8a(beaconPublicKeyHex)
       const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
       const id = await identityBuilder.build(roundNumber)
-      const ciphertext = tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey, this.curveId)
+      const ciphertext = tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey)
       const result = new Uint8Array(ciphertext)
       return ok(result)
     } catch (err) {
@@ -130,7 +115,7 @@ export class Timelock {
     try {
       await this.checkWasm()
       const signature = u8a(signatureHex)
-      return ok(new Uint8Array(tld(ciphertext, signature, this.curveId)))
+      return ok(new Uint8Array(tld(ciphertext, signature)))
     } catch (err) {
       return error(err.message)
     }
@@ -150,7 +135,7 @@ export class Timelock {
     try {
       await this.checkWasm()
       const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
-      return ok(new Uint8Array(decrypt(ciphertext, ephemeralSecretKey, this.curveId)))
+      return ok(new Uint8Array(decrypt(ciphertext, ephemeralSecretKey)))
     } catch (err) {
       return error(err.message)
     }

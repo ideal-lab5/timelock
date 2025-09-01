@@ -25,6 +25,10 @@ export PYO3_CROSS_PYTHON_VERSION="3.10"
 maturin develop --features "python"
 ```
 
+#### Testing
+
+Run wasm-pack tests with `wasm-pack test --node`
+
 #### Publish
 
 ``` sh
