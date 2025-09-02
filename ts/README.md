@@ -37,14 +37,10 @@ See the [example](../examples/web/react-tlock-demo/) for a full demonstration.
 
 ### Initialization
 
-Before using any encryption or decryption methods, initialize the library by creating a Timelock instance:
-
 ``` js
-import { SupportedBeacon, Timelock } from '@ideallabs/timelock.js'
-// Use curve BLS12-381 (e.g. Drand Quicknet)
-const timelockBls12_381 = await Timelock.build(SupportedCurve.BLS12_381);
-// Use curve BLS12-377 (e.g. IDN Beacon)
-const timelockBls12_377 = await Timelock.build(SupportedCurve.BLS12_377);
+import { Timelock } from '@ideallabs/timelock.js'
+// Uses curve BLS12-381 (e.g. Drand Quicknet)
+const timelock = await Timelock.build();
 ```
 
 ### Encrypting a Message
@@ -56,7 +52,7 @@ Messages can be encrypted for future rounds of a supported beacon's protocol by 
 import { Timelock, DrandIdentityHandler } from '@ideallabs/timelock.js'
 
 import hkdf from 'js-crypto-hkdf'
-// 1. Setup parameters for encryption
+// Setup parameters for encryption
 // use an hkdf to generate an ephemeral secret key
 const seed = new TextEncoder().encode('my-secret-seed')
 const hash = 'SHA-256'
@@ -68,14 +64,12 @@ const key = Array.from(esk.key)
 // the message to encrypt for the future
 const message = 'Hello, Timelock!'
 const encodedMessage = new TextEncoder().encode(message)
-// A randomness beacon public key (ex: IDN public key)
-// We first get it as hex and then convert to a Uint8Array
+// A randomness beacon public key (ex: Drand public key)
 const pubkey =
-  '41dc53da3d3617a189c85c8cb51a5f4fdfcebda05c50e81595f69e178d240fce3acdafd97b5fd204553e685836393a00b112f5cd78477d79ac8094c608d35bb42bd5091c5bbedd881e2ee0e8492a4361c69bf15250d75aee44035bc5b7553100'
+  '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a'
 // A future round number of the randomness beacon
 const roundNumber = 10
-
-// 2. Encrypt the message
+// Encrypt the message
 let ct = await Timelock.encrypt(
   encodedMessage,
   roundNumber,
@@ -91,7 +85,7 @@ console.log('Timelocked ciphertext: ' + JSON.stringify(ct))
 
 Any given randomness beacon may sign messages in its own unique way. For example, in Drand's Quicknet the beacon signs the sha256 hash of the round number of the procol as a big endian array (8 bytes from a u64 round number). In the Ideal network, the message is the sha256 hash of the round number concatenated with the validator set id of the set of validators that produced the beacon. 
 
-This library offers pre-defined identity handlers for usage with Drand Quicknet and the IDN beacon, the [DrandIdentityHandler](./src/interfaces/DrandIdentityBuilder.ts) and  [IdealNetworkIdentityHandler](./src/interfaces/IDNIdentityBuilder.ts), respectively. For beacons that construct messages differently, a custom identity handler must be implemented. 
+This library offers a pre-defined identity handler for usage with Drand Quicknet, the [DrandIdentityHandler](./src/interfaces/DrandIdentityBuilder.ts). For beacons that construct messages differently, a custom identity handler must be implemented. 
 
 ### Decrypting a Message
 
@@ -102,7 +96,7 @@ Decrypt data using a beacon signature:
  const sig =
   'e6cdf6c9d11c13e013b2c6cfd11dab46d8f1ace226ff845ffff4c7d6f64992892c54fb5d1f0f87dd300ce66f53598e01'
 // Decrypt the ciphertext with the signature
-const plaintext = await timelockIdeal.decrypt(ct, sig)
+const plaintext = await timelock.decrypt(ct, sig)
 console.log(`Recovered ${String.fromCharCode(...plaintext)}, Expected ${message}`)
 ```
 
@@ -126,6 +120,3 @@ console.log('Plaintext:', plaintext);
 ## License
 
 Apache-2.0
-
-
-TODO: Investigate time-to-drand-round function
