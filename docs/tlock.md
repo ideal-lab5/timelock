@@ -19,13 +19,13 @@ The scheme is instantiated with a private input of a master secret key and publi
 
 It consists of four PPT algorithms (Setup, Extract, Encrypt, Decrypt) defined as:
 
-- $(pp, s) \leftarrow Setup(1^\lambda)$ where $\lambda$ is the security parameter, $pp$ is the output (system) params and $s$ is the IBE master secret key. The system params are a generator $G \in \mathbb{G}_1$ and commitment to the master key, $P_{pub} = sG$.
+- $(pp, s) \leftarrow{R} Setup(1^\lambda)$ where $\lambda$ is the security parameter, $pp$ is the output (system) params and $s$ is the IBE master secret key. The system params are a generator $G \in \mathbb{G}_1$ and commitment to the master key, $P_{pub} = sG$.
 
-- $sk_{ID} \leftarrow Extract(mk, ID)$ outputs the private key for an $ID \in \{0, 1\}^*$.
+- $sk_{ID} \xleftarrow{R} Extract(mk, ID)$ outputs the private key for an $ID \in \{0, 1\}^*$.
 
-- $Encrypt(pp, ID, m) \to ct$ outputs the ciphertext $ct$ for any message $m \in \{0, 1\}^*$.
+- $ct \xleftarrow{R} Encrypt(pp, ID, m)$ outputs the ciphertext $ct$ for any message $m \in \{0, 1\}^*$.
 
-- $Decrypt(sk_{ID}, ct) \to m$ outputs the decrypted message $m$
+- $m \xleftarrow{} Decrypt(sk_{ID}, ct)$ outputs the decrypted message $m$
 
 We use the BF-IBE "FullIdent" scheme to encrypt messages such that their decryption key is broadcast as the output of at specific future time step of the computational reference clock. FullIdent is IND-ID-CCA secure. In FullIdent, public parameters are stored in $\mathbb{G}_1$, and the scheme uses type 1 pairings. We will instead use type 3 pairings, so our public parameters are in $\mathbb{G}_2$ instead.
 
@@ -63,6 +63,13 @@ For a ciphertext $C = \left <U, V, W\right >$ encrypted using the time slot $t$.
 
 
 ## Tlock
+
+Timelock encryption is a hybrid encryption scheme that leverages BF-IBE and a block cipher. In this instance, we use AES-GCM. Formally, Timelock encryption is composed of four PPT algorithms [Setup, Keygen, TLE, TLD]. We also assume the existence of a randomness beacon or computational reference clock (CRC) $\mathcal{C}$ with an associated PPT function $f_C(t)$ that outputs $f_C(r) = sk * H(r)$ for a round number $r > 0$ and where $H$ is a hash-to-G1 function.
+
+The setup and keygen algorithms are the same as BF-IBE.
+
+1. $ct \xleftarrow{R} TLE(m, esk, d)$ for a message $m \in \{0, 1\}^*$, en ephemeral 'master' secret key, $esk$, and $d > 0$ is a round number in the beacon or CRC.
+2. $m \xleftarrow{} TLD(ct, \sigma)$ for a ciphertext $ct$ and a signature $\sigma$ output from the CRC function (or randomness beacon).
 
 ### Encryption
 
