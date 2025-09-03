@@ -21,7 +21,7 @@ It consists of four PPT algorithms (Setup, Extract, Encrypt, Decrypt) defined as
 
 - $(pp, s) \leftarrow{R} Setup(1^\lambda)$ where $\lambda$ is the security parameter, $pp$ is the output (system) params and $s$ is the IBE master secret key. The system params are a generator $G \in \mathbb{G}_1$ and commitment to the master key, $P_{pub} = sG$.
 
-- $sk_{ID} \xleftarrow{R} Extract(mk, ID)$ outputs the private key for an $ID \in \{0, 1\}^*$.
+- $sk_{ID} \xleftarrow{R} Extract(sk, ID)$ outputs the private key for an $ID \in \{0, 1\}^*$.
 
 - $ct \xleftarrow{R} Encrypt(pp, ID, m)$ outputs the ciphertext $ct$ for any message $m \in \{0, 1\}^*$.
 
