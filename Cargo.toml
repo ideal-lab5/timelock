@@ -88,7 +88,7 @@ hex = "0.4.3"
 
 # wasm 
 serde-wasm-bindgen = { version = "0.6.5", default-features = false }
-wasm-bindgen = "0.2.92"
+wasm-bindgen = "0.2.100"
 pyo3 = { version = "0.23.1", features = [
     "extension-module",
     "macros",
