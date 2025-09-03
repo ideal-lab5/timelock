@@ -19,7 +19,6 @@ use crate::{
 	ibe::fullident::{Ciphertext as IBECiphertext, IBESecret, Identity, Input},
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-
 use ark_std::{
 	rand::{CryptoRng, Rng},
 	vec::Vec,
@@ -79,11 +78,12 @@ where
 	R: Rng + CryptoRng,
 {
 	// IBE encryption 'to the future'
-	let input = Input::from_array(secret_key).expect("The secret key has 32");
+	let input = Input::new(secret_key).expect("The secret key has 32 bytes.");
 	let header: IBECiphertext<E> = id.encrypt(&input, p_pub, &mut rng);
 	// encrypt arbitrary-length messages with a block cipher
 	let body =
 		S::encrypt(message, secret_key, &mut rng).map_err(|_| Error::MessageEncryptionError)?;
+
 	let mut message_bytes = Vec::new();
 	body.serialize_compressed(&mut message_bytes)
 		.expect("Encryption output must be serializable.");
@@ -145,7 +145,7 @@ mod test {
 		handler: &dyn Fn(TestStatusReport) -> (),
 	) {
 		let message = b"this is a test message".to_vec();
-		let id = Identity::new(b"", b"id".to_vec());
+		let id = Identity::new(b"", &message);
 		let sk = E::Scalar::rand(&mut OsRng);
 		let p_pub = E::PublicKeyGroup::generator() * sk;
 
@@ -286,7 +286,7 @@ mod test {
 			hasher.finalize().to_vec()
 		};
 
-		let identity = Identity::new(b"", message);
+		let identity = Identity::new(b"", &message);
 
 		let ct = tle::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
 			pub_key, esk, plaintext, identity, OsRng,

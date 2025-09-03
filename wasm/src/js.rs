@@ -74,7 +74,7 @@ pub fn do_tle<E: EngineBLS>(
 
 	let id_bytes: Vec<u8> = serde_wasm_bindgen::from_value(id_js.clone())
 		.map_err(|_| JsError::new("could not decode id"))?;
-	let identity = Identity::new(b"", id_bytes);
+	let identity = Identity::new(b"", &id_bytes);
 	let message_bytes: Vec<u8> = serde_wasm_bindgen::from_value(message_js.clone())
 		.map_err(|_| JsError::new("could not decode message"))?;
 
@@ -204,7 +204,7 @@ mod test {
 
 		let msk: <E as EngineBLS>::Scalar =
 			convert_from_bytes::<<E as EngineBLS>::Scalar, 32>(&sk.clone()).unwrap();
-		let identity = Identity::new(b"", identity_vec);
+		let identity = Identity::new(b"", &identity_vec);
 
 		let sig: E::SignatureGroup = identity.extract::<E>(msk).0;
 		let mut sig_bytes: Vec<_> = Vec::new();
@@ -213,7 +213,7 @@ mod test {
 			sig.serialize_compressed(&mut sig_bytes).unwrap();
 		} else {
 			let bad_ident_vec = b"bad_ident".to_vec();
-			let bad_ident = Identity::new(b"", bad_ident_vec);
+			let bad_ident = Identity::new(b"", &bad_ident_vec);
 			let bad_sig: E::SignatureGroup = bad_ident.extract::<E>(msk).0;
 			let bad_sig_vec = vec![bad_sig];
 			bad_sig_vec.serialize_compressed(&mut sig_bytes).unwrap();
@@ -258,7 +258,7 @@ mod test {
 
 	pub fn can_encrypt_decrypt<E: EngineBLS>() {
 		let message: Vec<u8> = b"this is a test message".to_vec();
-		let id: Vec<u8> = b"testing purposes".to_vec();
+		let id: Vec<u8> = b"testing purposes!!!!!!!!!!!!!!!!!".to_vec();
 		setup_test::<E>(id, message.clone(), true, true, &|status: TestStatusReport| match status {
 			TestStatusReport::EncryptSuccess { ciphertext } => {
 				let ciphertext_convert: Vec<u8> =
@@ -281,8 +281,8 @@ mod test {
 	}
 
 	pub fn can_encrypt_decrypt_early<E: EngineBLS>() {
-		let message: Vec<u8> = b"this is a test message".to_vec();
-		let id: Vec<u8> = b"testing purposes".to_vec();
+		let message: Vec<u8> = b"this is a test message0".to_vec();
+		let id: Vec<u8> = b"testing purposes!!!!!!!!!!!!!!!!!".to_vec();
 		setup_test::<E>(
 			id,
 			message.clone(),
