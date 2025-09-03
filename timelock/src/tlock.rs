@@ -145,7 +145,7 @@ mod test {
 		handler: &dyn Fn(TestStatusReport) -> (),
 	) {
 		let message = b"this is a test message".to_vec();
-		let id = Identity::new(b"", vec![b"id".to_vec()]);
+		let id = Identity::new(b"", b"id".to_vec());
 		let sk = E::Scalar::rand(&mut OsRng);
 		let p_pub = E::PublicKeyGroup::generator() * sk;
 
@@ -286,7 +286,7 @@ mod test {
 			hasher.finalize().to_vec()
 		};
 
-		let identity = Identity::new(b"", vec![message]);
+		let identity = Identity::new(b"", message);
 
 		let ct = tle::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
 			pub_key, esk, plaintext, identity, OsRng,

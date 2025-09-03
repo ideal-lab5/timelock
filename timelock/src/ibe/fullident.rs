@@ -17,7 +17,6 @@
 use super::utils::{cross_product_32, h2, h3, h4};
 use alloc::vec;
 use ark_ec::PrimeGroup;
-use ark_ff::Zero;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::Mul, rand::Rng, vec::Vec};
 use serde::{Deserialize, Serialize};
@@ -74,16 +73,13 @@ impl<E: EngineBLS> Input<E> {
 
 /// A type to represent an IBE identity (for which we will encrypt message)
 #[derive(Debug, Clone)]
-pub struct Identity(pub Vec<Message>);
+pub struct Identity(pub Message);
 
 impl Identity {
 	/// construct a new identity from a string
-	pub fn new(ctx: &[u8], identities: Vec<Vec<u8>>) -> Self {
+	pub fn new(ctx: &[u8], bytes: Vec<u8>) -> Self {
 		Self(
-			identities
-				.iter()
-				.map(|identity| Message::new(ctx, identity))
-				.collect::<Vec<_>>(),
+			Message::new(ctx, &bytes)
 		)
 	}
 
@@ -94,10 +90,7 @@ impl Identity {
 
 	/// Derive the public key for this identity (hash to G1)
 	pub fn public<E: EngineBLS>(&self) -> E::SignatureGroup {
-		self.0
-			.iter()
-			.map(|message| message.hash_to_signature_curve::<E>())
-			.fold(E::SignatureGroup::zero(), |acc, val| acc + val)
+		self.0.hash_to_signature_curve::<E>()
 	}
 
 	/// BF-IBE encryption
@@ -234,16 +227,15 @@ mod test {
 	#[test]
 	pub fn fullident_identity_construction_works() {
 		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
-
+		let identity = Identity::new(b"", id_string.to_vec());
 		let expected_message = Message::new(b"", id_string);
-		assert_eq!(identity.0[0], expected_message);
+		assert_eq!(identity.0, expected_message);
 	}
 
 	#[test]
 	pub fn fullident_encrypt_and_decrypt() {
 		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
+		let identity = Identity::new(b"", id_string.to_vec());
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, false, false, &|status: TestStatusReport| {
@@ -259,7 +251,7 @@ mod test {
 	#[test]
 	pub fn fullident_decryption_fails_with_bad_ciphertext() {
 		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
+		let identity = Identity::new(b"", id_string.to_vec());
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, false, true, &|status: TestStatusReport| {
@@ -275,7 +267,7 @@ mod test {
 	#[test]
 	pub fn fullident_decryption_fails_with_bad_key() {
 		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
+		let identity = Identity::new(b"", id_string.to_vec());
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, true, false, &|status: TestStatusReport| {

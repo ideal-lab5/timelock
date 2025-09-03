@@ -44,7 +44,7 @@ fn tlock_split(c: &mut Criterion) {
 	static KB: usize = 1024;
 	let s = <TinyBLS381 as EngineBLS>::Scalar::rand(&mut OsRng);
 	let p_pub = <TinyBLS381 as EngineBLS>::PublicKeyGroup::generator() * s;
-	let id = Identity::new(b"", vec![b"test".to_vec()]);
+	let id = Identity::new(b"", b"test".to_vec());
 
 	// Benchmark encryption
 	let mut encrypt_group = c.benchmark_group("tlock_encrypt");

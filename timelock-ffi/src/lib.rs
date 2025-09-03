@@ -348,7 +348,7 @@ pub unsafe extern "C" fn timelock_encrypt(
     };
 
     // Create identity
-    let timelock_identity = Identity::new(b"", vec![identity_slice.to_vec()]);
+    let timelock_identity = Identity::new(b"", identity_slice.to_vec());
 
     // Perform encryption
     let ciphertext = match tle::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(

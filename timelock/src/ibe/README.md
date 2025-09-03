@@ -13,7 +13,7 @@ use ark_std::test_rng;
 
 // Create an identity
 let id_string = b"example@test.com";
-let identity = Identity::new(b"", vec![id_string.to_vec()]);
+let identity = Identity::new(b"", id_string.to_vec());
 
 // Generate a message
 let message: [u8; 32] = [1; 32];

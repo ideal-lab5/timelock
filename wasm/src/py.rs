@@ -55,7 +55,7 @@ fn tle(
 		hasher.update(round_number.to_be_bytes());
 		hasher.finalize().to_vec()
 	};
-	let identity = Identity::new(b"", vec![id]);
+	let identity = Identity::new(b"", id);
 
 	let ciphertext = timelock_encrypt::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
 		pp, msk_bytes, &message, identity, OsRng,
