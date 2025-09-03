@@ -109,14 +109,11 @@ where
 	let secret_bytes = IBESecret(signature)
 		.decrypt(&ciphertext.header)
 		.map_err(|_| Error::InvalidSignature)?;
-	// ensure we recovered a valid sized secret
-	let secret_array: [u8; 32] = secret_bytes.try_into().map_err(|_| Error::InvalidSecretKey)?;
-
 	// TODO: Enhanced SerializationError handling https://github.com/ideal-lab5/timelock/issues/11
 	let ct = S::Ciphertext::deserialize_compressed(&mut &ciphertext.body[..])
 		.map_err(|_| Error::DeserializationError)?;
 
-	S::decrypt(ct, secret_array).map_err(|_| Error::DecryptionError)
+	S::decrypt(ct, secret_bytes).map_err(|_| Error::DecryptionError)
 }
 
 #[cfg(test)]

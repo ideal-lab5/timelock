@@ -21,8 +21,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::Mul, rand::Rng, vec::Vec};
 use serde::{Deserialize, Serialize};
 
-use crate::engines::EngineBLS;
-use crate::{Hash, HASH_LENGTH, Message};
+use crate::{engines::EngineBLS, Hash, Message, HASH_LENGTH};
 
 /// Represents a serialized field element of a scalar field
 pub type SerializedFieldElement = [u8; 32];
@@ -53,7 +52,7 @@ pub enum InputError {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Input<E: EngineBLS> {
-	data: Vec<u8>,
+	data: SerializedFieldElement,
 	_phantom: ark_std::marker::PhantomData<E>,
 }
 
@@ -74,7 +73,7 @@ pub struct Identity(pub Message);
 impl Identity {
 	/// construct a new identity from a string
 	pub fn new(ctx: &[u8], identity: &[u8]) -> Self {
-		Self(Message::new(ctx, &identity))
+		Self(Message::new(ctx, identity))
 	}
 
 	/// The IBE extract function on a given secret key
@@ -218,15 +217,14 @@ mod test {
 
 	#[test]
 	pub fn fullident_identity_construction_works() {
-
-		let identity = Identity::new(b"", &[1,2,3]);
-		let expected_message = Message::new(b"", &[1,2,3]);
+		let identity = Identity::new(b"", &[1, 2, 3]);
+		let expected_message = Message::new(b"", &[1, 2, 3]);
 		assert_eq!(identity.0, expected_message);
 	}
 
 	#[test]
 	pub fn fullident_encrypt_and_decrypt() {
-		let identity = Identity::new(b"", &[1,2,3]);
+		let identity = Identity::new(b"", &[1, 2, 3]);
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, false, false, &|status: TestStatusReport| {
@@ -241,7 +239,7 @@ mod test {
 
 	#[test]
 	pub fn fullident_decryption_fails_with_bad_ciphertext() {
-		let identity = Identity::new(b"", &[1,2,3]);
+		let identity = Identity::new(b"", &[1, 2, 3]);
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, false, true, &|status: TestStatusReport| {
@@ -256,7 +254,7 @@ mod test {
 
 	#[test]
 	pub fn fullident_decryption_fails_with_bad_key() {
-		let identity = Identity::new(b"", &[1,2,3]);
+		let identity = Identity::new(b"", &[1, 2, 3]);
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, true, false, &|status: TestStatusReport| {
