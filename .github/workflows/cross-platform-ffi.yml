@@ -39,6 +39,7 @@ jobs:
     - name: Install system dependencies (macOS)
       if: matrix.os == 'macos-latest'
       run: |
+        brew uninstall --ignore-dependencies cmake || true
         brew install cmake pkg-config
     
     - name: Install system dependencies (Windows)
