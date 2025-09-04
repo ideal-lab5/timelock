@@ -17,13 +17,13 @@
 use alloc::vec::Vec;
 
 use ark_ec::{
-	AffineRepr, CurveGroup,
 	hashing::{
-		HashToCurve,
 		curve_maps::wb::{WBConfig, WBMap},
 		map_to_curve_hasher::{MapToCurve, MapToCurveBasedHasher},
+		HashToCurve,
 	},
 	pairing::{MillerLoopOutput, Pairing},
+	AffineRepr, CurveGroup,
 };
 use ark_ff::field_hashers::DefaultFieldHasher;
 

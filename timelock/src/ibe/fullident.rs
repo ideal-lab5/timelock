@@ -14,29 +14,30 @@
  * limitations under the License.
  */
 
-use super::utils::{cross_product_32, h2, h3, h4};
+use super::utils::{cross_product_const, h2, h3, h4};
 use alloc::vec;
 use ark_ec::PrimeGroup;
-use ark_ff::Zero;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{ops::Mul, rand::Rng, vec::Vec};
 use serde::{Deserialize, Serialize};
 
-use crate::Message;
+use crate::{engines::EngineBLS, Hash, Message, HASH_LENGTH};
 
-use crate::engines::EngineBLS;
+/// Represents a serialized field element of a scalar field
+pub type SerializedFieldElement = [u8; 32];
 
 /// Represents a ciphertext in the BF-IBE FullIdent scheme
 #[derive(
 	Debug, Clone, PartialEq, CanonicalDeserialize, CanonicalSerialize, Serialize, Deserialize,
 )]
+#[repr(C)] // since we know the exact size at compile time
 pub struct Ciphertext<E: EngineBLS> {
 	/// U = rP
 	pub u: E::PublicKeyGroup,
 	/// V = sigma (+) H_2(g_id^r)
-	pub v: Vec<u8>,
+	pub v: Hash,
 	/// W = message (+) H_4(sigma)
-	pub w: Vec<u8>,
+	pub w: Hash,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,20 +52,13 @@ pub enum InputError {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Input<E: EngineBLS> {
-	data: Vec<u8>,
+	data: SerializedFieldElement,
 	_phantom: ark_std::marker::PhantomData<E>,
 }
 
 impl<E: EngineBLS> Input<E> {
-	pub fn new(data: Vec<u8>) -> Result<Self, InputError> {
-		if data.len() != E::SECRET_KEY_SIZE {
-			return Err(InputError::InvalidLength);
-		}
+	pub fn new(data: SerializedFieldElement) -> Result<Self, InputError> {
 		Ok(Self { data, _phantom: ark_std::marker::PhantomData })
-	}
-
-	pub fn from_array(data: [u8; 32]) -> Result<Self, InputError> {
-		Self::new(data.to_vec())
 	}
 
 	pub fn as_bytes(&self) -> &[u8] {
@@ -74,17 +68,12 @@ impl<E: EngineBLS> Input<E> {
 
 /// A type to represent an IBE identity (for which we will encrypt message)
 #[derive(Debug, Clone)]
-pub struct Identity(pub Vec<Message>);
+pub struct Identity(pub Message);
 
 impl Identity {
 	/// construct a new identity from a string
-	pub fn new(ctx: &[u8], identities: Vec<Vec<u8>>) -> Self {
-		Self(
-			identities
-				.iter()
-				.map(|identity| Message::new(ctx, identity))
-				.collect::<Vec<_>>(),
-		)
+	pub fn new(ctx: &[u8], identity: &[u8]) -> Self {
+		Self(Message::new(ctx, identity))
 	}
 
 	/// The IBE extract function on a given secret key
@@ -94,10 +83,7 @@ impl Identity {
 
 	/// Derive the public key for this identity (hash to G1)
 	pub fn public<E: EngineBLS>(&self) -> E::SignatureGroup {
-		self.0
-			.iter()
-			.map(|message| message.hash_to_signature_curve::<E>())
-			.fold(E::SignatureGroup::zero(), |acc, val| acc + val)
+		self.0.hash_to_signature_curve::<E>()
 	}
 
 	/// BF-IBE encryption
@@ -120,7 +106,7 @@ impl Identity {
 	{
 		let bytes = message.as_bytes();
 		// sigma <- {0, 1}^d
-		let mut sigma = vec![0u8;E::SECRET_KEY_SIZE];
+		let mut sigma = vec![0u8; E::SECRET_KEY_SIZE];
 		rng.fill_bytes(&mut sigma);
 		// r= H3(sigma, message)
 		let r: E::Scalar = h3::<E>(&sigma, bytes);
@@ -131,12 +117,12 @@ impl Identity {
 		let g_id = E::pairing(p_pub.mul(r), self.public::<E>());
 		// sigma (+) H2(e(P_pub, Q_id))
 		let v_rhs = h2(g_id);
-		let v_out = cross_product_32(&sigma, &v_rhs);
+		let v = cross_product_const::<HASH_LENGTH>(&sigma, &v_rhs);
 		// message (+) H4(sigma)
 		let w_rhs = h4(&sigma);
-		let w_out = cross_product_32(bytes, &w_rhs);
+		let w = cross_product_const::<HASH_LENGTH>(bytes, &w_rhs);
 		// (rP, sigma (+) H2(e(Q_id, P_pub)), message (+) H4(sigma))
-		Ciphertext::<E> { u, v: v_out.to_vec(), w: w_out.to_vec() }
+		Ciphertext::<E> { u, v, w }
 	}
 }
 
@@ -145,23 +131,21 @@ impl Identity {
 pub struct IBESecret<E: EngineBLS>(pub E::SignatureGroup);
 
 impl<E: EngineBLS> IBESecret<E> {
-	/// BF-IBE decryption of a 
-	/// * `ciphertext`: C = <U, V, W> 
+	/// BF-IBE decryption of a
+	/// * `ciphertext`: C = <U, V, W>
 	///
 	/// Attempts to decrypt under the given IBESecret (in G1)
-	pub fn decrypt(&self, ciphertext: &Ciphertext<E>) -> Result<Vec<u8>, IbeError> {
+	pub fn decrypt(&self, ciphertext: &Ciphertext<E>) -> Result<Hash, IbeError> {
 		// sigma = V (+) H2(e(d_id, U))
 		let sigma_rhs = h2(E::pairing(ciphertext.u, self.0));
-		let sigma = cross_product_32(&ciphertext.v, &sigma_rhs);
+		let sigma = cross_product_const::<HASH_LENGTH>(&ciphertext.v, &sigma_rhs);
 		// m = W (+) H4(sigma)
 		let m_rhs = h4(&sigma);
-		let m = cross_product_32(&ciphertext.w, &m_rhs);
+		let m = cross_product_const::<HASH_LENGTH>(&ciphertext.w, &m_rhs);
 		// check: U == rP
 		let p = E::PublicKeyGroup::generator();
 		let r = h3::<E>(&sigma, &m);
 		let u_check = p * r;
-
-		// TODO: timing attack? should do a constant-time check
 		if !u_check.eq(&ciphertext.u) {
 			return Err(IbeError::DecryptionFailed);
 		}
@@ -179,7 +163,7 @@ mod test {
 
 	// this enum represents the conditions or branches that I want to test
 	enum TestStatusReport {
-		DecryptionResult { data: Vec<u8>, verify: Vec<u8> },
+		DecryptionResult { data: [u8; 32], verify: Vec<u8> },
 		DecryptionFailure { error: IbeError },
 	}
 
@@ -205,10 +189,10 @@ mod test {
 
 		let p_pub = <<EB as EngineBLS>::PublicKeyGroup as PrimeGroup>::generator() * msk;
 
-		let mut ct = Ciphertext { u: EB::PublicKeyGroup::generator(), v: vec![], w: vec![] };
+		let mut ct = Ciphertext { u: EB::PublicKeyGroup::generator(), v: [0u8; 32], w: [0u8; 32] };
 
 		if !insert_bad_ciphertext {
-			ct = identity.encrypt(&Input::from_array(message).unwrap(), p_pub, &mut test_rng());
+			ct = identity.encrypt(&Input::new(message).unwrap(), p_pub, &mut test_rng());
 		}
 
 		match sk.decrypt(&ct) {
@@ -233,23 +217,20 @@ mod test {
 
 	#[test]
 	pub fn fullident_identity_construction_works() {
-		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
-
-		let expected_message = Message::new(b"", id_string);
-		assert_eq!(identity.0[0], expected_message);
+		let identity = Identity::new(b"", &[1, 2, 3]);
+		let expected_message = Message::new(b"", &[1, 2, 3]);
+		assert_eq!(identity.0, expected_message);
 	}
 
 	#[test]
 	pub fn fullident_encrypt_and_decrypt() {
-		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
+		let identity = Identity::new(b"", &[1, 2, 3]);
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, false, false, &|status: TestStatusReport| {
 			match status {
 				TestStatusReport::DecryptionResult { data, verify } => {
-					assert_eq!(data, verify);
+					assert_eq!(data.to_vec(), verify);
 				},
 				_ => panic!("Decryption should work"),
 			}
@@ -258,8 +239,7 @@ mod test {
 
 	#[test]
 	pub fn fullident_decryption_fails_with_bad_ciphertext() {
-		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
+		let identity = Identity::new(b"", &[1, 2, 3]);
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, false, true, &|status: TestStatusReport| {
@@ -274,8 +254,7 @@ mod test {
 
 	#[test]
 	pub fn fullident_decryption_fails_with_bad_key() {
-		let id_string = b"example@test.com";
-		let identity = Identity::new(b"", vec![id_string.to_vec()]);
+		let identity = Identity::new(b"", &[1, 2, 3]);
 		let message: [u8; 32] = [2; 32];
 
 		run_test::<TinyBLS381>(identity, message, true, false, &|status: TestStatusReport| {

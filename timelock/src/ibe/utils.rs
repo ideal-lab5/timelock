@@ -15,7 +15,6 @@
  */
 
 use crate::engines::EngineBLS;
-use alloc::borrow::ToOwned;
 use ark_ff::PrimeField;
 use ark_serialize::CanonicalSerialize;
 use ark_std::vec::Vec;
@@ -28,13 +27,32 @@ pub fn sha256(b: &[u8]) -> Vec<u8> {
 	hasher.finalize().to_vec()
 }
 
-// TODO: can do this in place instead
-pub fn cross_product_32(a: &[u8], b: &[u8]) -> Vec<u8> {
-	let mut o = a.to_owned();
-	for (i, ri) in o.iter_mut().enumerate().take(32) {
-		*ri ^= b[i];
+#[inline(always)]
+pub fn cross_product_const<const N: usize>(a: &[u8], b: &[u8]) -> [u8; N] {
+	let mut result = [0u8; N];
+
+	// Process 8 bytes at a time using u64 for better performance
+	let chunks = N / 8;
+	let remainder = N % 8;
+
+	// Process full 8-byte chunks
+	for i in 0..chunks {
+		let start_idx = i * 8;
+		let end_idx = start_idx + 8;
+
+		let a_chunk = u64::from_ne_bytes(a[start_idx..end_idx].try_into().unwrap());
+		let b_chunk = u64::from_ne_bytes(b[start_idx..end_idx].try_into().unwrap());
+		let result_chunk = (a_chunk ^ b_chunk).to_ne_bytes();
+		result[start_idx..end_idx].copy_from_slice(&result_chunk);
 	}
-	o.to_vec()
+
+	// Handle remaining bytes
+	let remainder_start = chunks * 8;
+	for j in 0..remainder {
+		result[remainder_start + j] = a[remainder_start + j] ^ b[remainder_start + j];
+	}
+
+	result
 }
 
 /// a map from G -> {0, 1}^{32}

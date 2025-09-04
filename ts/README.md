@@ -1,4 +1,4 @@
-# Timelock Encyrption TypeScript Wrapper
+# Timelock Encryption TypeScript Wrapper
 
 This is a typescript library for timelock encryption. It is a "thin" wrapper that calls the WebAssembly (WASM) implementation of timelock encryption. It is designed for use in web-based environments and easily integrates with frameworks like React, Vue, etc. The library supports [Drand's](https://drand.love) Quicknet.
 

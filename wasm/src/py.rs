@@ -22,9 +22,9 @@ use rand::rngs::OsRng;
 use sha2::Digest;
 use timelock::{
 	block_ciphers::AESGCMBlockCipherProvider,
-	engines::{EngineBLS, drand::TinyBLS381},
+	engines::{drand::TinyBLS381, EngineBLS},
 	ibe::fullident::Identity,
-	tlock::{TLECiphertext, tld as timelock_decrypt, tle as timelock_encrypt},
+	tlock::{tld as timelock_decrypt, tle as timelock_encrypt, TLECiphertext},
 };
 
 /// The encrypt wrapper used by the Python bindings to call tlock.rs encrypt
@@ -55,7 +55,7 @@ fn tle(
 		hasher.update(round_number.to_be_bytes());
 		hasher.finalize().to_vec()
 	};
-	let identity = Identity::new(b"", vec![id]);
+	let identity = Identity::new(b"", id);
 
 	let ciphertext = timelock_encrypt::<TinyBLS381, AESGCMBlockCipherProvider, OsRng>(
 		pp, msk_bytes, &message, identity, OsRng,

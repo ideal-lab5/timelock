@@ -26,6 +26,9 @@ pub mod ibe;
 pub mod tlock;
 use crate::engines::EngineBLS;
 
+/// The length of hashes output from sha256
+const HASH_LENGTH: usize = 32;
+type Hash = [u8; HASH_LENGTH];
 // Adapted from: https://github.com/w3f/bls
 /// Internal message hash size.  
 ///
@@ -33,7 +36,7 @@ use crate::engines::EngineBLS;
 /// find messages with the same hash.
 const MESSAGE_SIZE: usize = 32;
 
-type MessageDigest = [u8; MESSAGE_SIZE];
+pub type MessageDigest = [u8; MESSAGE_SIZE];
 /// Internal message hash type.  Short for frequent rehashing
 /// by `HashMap`, etc.
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]

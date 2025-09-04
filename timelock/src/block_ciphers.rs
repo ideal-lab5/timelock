@@ -15,8 +15,8 @@
  */
 
 use aes_gcm::{
-	Aes256Gcm, Nonce,
 	aead::{Aead, AeadCore, AeadInPlace, KeyInit},
+	Aes256Gcm, Nonce,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::Rng;
