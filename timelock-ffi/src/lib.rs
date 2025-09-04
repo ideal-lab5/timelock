@@ -578,6 +578,10 @@ pub unsafe extern "C" fn timelock_get_last_error() -> *const c_char {
 
 /// Get the version of the timelock library
 ///
+/// # Safety
+/// This function is safe to call from any context. It returns a pointer to
+/// static string data that remains valid for the lifetime of the program.
+///
 /// # Returns
 /// Null-terminated string with the version (static, no need to free)
 #[no_mangle]
@@ -590,6 +594,11 @@ pub unsafe extern "C" fn timelock_get_version() -> *const c_char {
 ///
 /// Call this function before using any other timelock functions.
 /// It's safe to call this multiple times.
+///
+/// # Safety
+/// This function is safe to call from any context and performs internal
+/// validation of cryptographic constants. No special safety requirements
+/// for the caller.
 ///
 /// # Returns
 /// `TimelockResult::Success` on success
@@ -611,6 +620,10 @@ pub unsafe extern "C" fn timelock_init() -> TimelockResult {
 ///
 /// Call this function when you're done using the timelock library.
 /// It's safe to call this multiple times.
+///
+/// # Safety
+/// This function is safe to call from any context and only cleans up
+/// internal library state. No special safety requirements for the caller.
 #[no_mangle]
 pub unsafe extern "C" fn timelock_cleanup() {
 	// Clean up any global resources
