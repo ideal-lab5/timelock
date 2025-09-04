@@ -44,7 +44,7 @@ dependent-version = "fix"
 timelock = { path = "./timelock", default-features = false }
 
 # encoding
-codec = { package = "parity-scale-codec", version = "3.2.2", default-features = false, features = [
+codec = { package = "parity-scale-codec", version = "3.7.5", default-features = false, features = [
     "derive",
     "max-encoded-len",
 ] }
