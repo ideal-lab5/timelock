@@ -1,6 +1,6 @@
 {
   "name": "@ideallabs/timelock.js",
-  "version": "0.2.0-dev",
+  "version": "0.3.0",
   "description": "A typescript interface for timelock encryption.",
   "license": "Apache-2.0",
   "repository": "https://github.com/ideal-lab5/timelock",
