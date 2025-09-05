@@ -1,6 +1,6 @@
 # Timelock Encryption TypeScript Wrapper
 
-This is a typescript library for timelock encryption. It is a "thin" wrapper that calls the WebAssembly (WASM) implementation of timelock encryption. It is designed for use in web-based environments and easily integrates with frameworks like React, Vue, etc. The library supports [Drand's](https://drand.love) Quicknet.
+This is a typescript library for timelock encryption. It is a "thin" wrapper that calls the WebAssembly (WASM) implementation of timelock encryption. It is designed for use in web-based environments and easily integrates with frameworks like React, Vue, etc. The library currently supports randomness beacons using curve BLS12-381m such as [Drand's](https://drand.love) Quicknet.
 
 ## Installation
 
@@ -49,35 +49,31 @@ Messages can be encrypted for future rounds of a supported beacon's protocol by 
 
 ``` js
 // import a pre-defined IdentityHandler implementation or create your own
-import { Timelock, DrandIdentityHandler } from '@ideallabs/timelock.js'
-
+import { Timelock } from '@ideallabs/timelock.js'
 import hkdf from 'js-crypto-hkdf'
-// Setup parameters for encryption
+// 1. Setup parameters for encryption
 // use an hkdf to generate an ephemeral secret key
 const seed = new TextEncoder().encode('my-secret-seed')
 const hash = 'SHA-256'
 const length = 32
 const esk = await hkdf.compute(seed, hash, length, '')
-const key = Array.from(esk.key)
-  .map((byte) => byte.toString(16).padStart(2, '0'))
-  .join('')
 // the message to encrypt for the future
 const message = 'Hello, Timelock!'
 const encodedMessage = new TextEncoder().encode(message)
 // A randomness beacon public key (ex: Drand public key)
-const pubkey =
-  '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a'
+const pkhex = '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a'
+const pubkey = Uint8Array.from(
+  pkHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
+)
 // A future round number of the randomness beacon
-const roundNumber = 10
-// Encrypt the message
-let ct = await Timelock.encrypt(
+const roundNumber = 1000
+// 2. Encrypt the message
+let ct = await timelockDrand.encrypt(
   encodedMessage,
   roundNumber,
-  DrandIdentityBuilder,
+  esk.key,
   pubkey,
-  key
 )
-
 console.log('Timelocked ciphertext: ' + JSON.stringify(ct))
 ```
 
@@ -93,11 +89,13 @@ Decrypt data using a beacon signature:
 
 ``` js
 // Acquire a signature for decryption from he pulse output by the beacon at the given roundNumber
- const sig =
-  'e6cdf6c9d11c13e013b2c6cfd11dab46d8f1ace226ff845ffff4c7d6f64992892c54fb5d1f0f87dd300ce66f53598e01'
+const sigHex = ('b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342b73a8dd2bacbe47e4b6b63ed5e39')
+const sig = Uint8Array.from(
+  sigHex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
+)
 // Decrypt the ciphertext with the signature
-const plaintext = await timelock.decrypt(ct, sig)
-console.log(`Recovered ${String.fromCharCode(...plaintext)}, Expected ${message}`)
+const plaintext = await timelockDrand.decrypt(ct, sig)
+console.log(`Recovered ${String.fromCharCode(...plaintext)}git `)
 ```
 
 ### Force Decrypting a Message

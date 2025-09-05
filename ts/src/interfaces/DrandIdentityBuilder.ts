@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import { u8a } from '../timelock';
 import { IdentityBuilder } from './IIdentityBuilder'
 import { Buffer } from "buffer";
 
@@ -39,6 +37,30 @@ function generateMessage(round: number): Promise<Uint8Array> {
     const buffer = Buffer.alloc(8);
     buffer.writeBigUInt64BE(BigInt(round), 0);
     return sha256(buffer).then(result => u8a(result))
+}
+
+/**
+ * Converts the hex-encoded string to a Uint8Array
+ * @param hex A hex-encoded string
+ * @returns A Uint8Array
+ */
+function u8a(hexString: string): Uint8Array {
+    // filter out invalid chars
+    if (!/^[0-9a-fA-F]*$/.test(hexString)) {
+        throw new Error("Invalid hex string: Contains non-hex characters")
+    }
+
+    const length = hexString.length;
+    if (length % 2 !== 0) {
+        throw new Error("Invalid hex string: Length must be even.");
+    }
+
+    const bytes = new Uint8Array(length / 2);
+    for (let i = 0; i < length; i += 2) {
+        bytes[i / 2] = (parseInt(hexString[i], 16) << 4) | parseInt(hexString[i + 1], 16);
+    }
+
+    return bytes;
 }
 
 /**

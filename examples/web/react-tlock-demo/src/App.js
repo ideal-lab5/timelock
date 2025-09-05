@@ -16,7 +16,7 @@
 
 import './App.css'
 import React, { useEffect, useState } from 'react'
-import { Timelock, DrandIdentityBuilder, SupportedCurve, u8a } from '@ideallabs/timelock.js'
+import { Timelock } from '@ideallabs/timelock.js'
 import hkdf from 'js-crypto-hkdf'
 
 function App() {
@@ -24,7 +24,7 @@ function App() {
   const [timelockDrand, setTimelockDrand] = useState(null)
 
   useEffect(() => {
-    Timelock.build(SupportedCurve.BLS12_381).then((tlock) => {
+    Timelock.build().then((tlock) => {
       setTimelockDrand(tlock)
     })
   }, [])
@@ -42,34 +42,28 @@ function App() {
     const hash = 'SHA-256'
     const length = 32
     const esk = await hkdf.compute(seed, hash, length, '')
-    const key = Array.from(esk.key)
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('')
     // the message to encrypt for the future
     const message = 'Hello, Timelock!'
     const encodedMessage = new TextEncoder().encode(message)
-    // A randomness beacon public key (ex: IDN public key)
-    // We first get it as hex and then convert to a Uint8Array
-    const pubkey =
-      '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a'
+    // A randomness beacon public key (ex: Drand public key)
+    const pubkey = fromHexString('83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a')
     // A future round number of the randomness beacon
     const roundNumber = 1000
     // 2. Encrypt the message
     let ct = await timelockDrand.encrypt(
       encodedMessage,
       roundNumber,
-      DrandIdentityBuilder,
+      esk.key,
       pubkey,
-      key
     )
     console.log('Timelocked ciphertext: ' + JSON.stringify(ct))
 
     // 3. Acquire a signature for decryption from he pulse output by the beacon at the given roundNumber
-    const sigHex =
-      'b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342b73a8dd2bacbe47e4b6b63ed5e39'
+    const sig =
+      fromHexString('b44679b9a59af2ec876b1a6b1ad52ea9b1615fc3982b19576350f93447cb1125e342b73a8dd2bacbe47e4b6b63ed5e39')
     // Decrypt the ciphertext with the signature
-    const plaintext = await timelockDrand.decrypt(ct, sigHex)
-    // console.log(plaintext)
+    const plaintext = await timelockDrand.decrypt(ct, sig)
+    console.log(plaintext)
     console.log(`Recovered ${String.fromCharCode(...plaintext)}, Expected ${message}`)
   }
 
