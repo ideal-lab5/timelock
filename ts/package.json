@@ -7,7 +7,7 @@
   "main": "dist/index.js",
   "type": "module",
   "dependencies": {
-    "@ideallabs/timelock_wasm_wrapper": "^0.2.0-dev"
+    "@ideallabs/timelock_wasm_wrapper": "^0.3.0"
   },
   "scripts": {
     "build:wasm": "cd ../wasm && ./wasm_build.sh",
@@ -18,12 +18,15 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
+    "transform": {
+      "node_modules/variables/.+\\.(j|t)sx?$": "ts-jest"
+    },
+    "transformIgnorePatterns": [
+      "//node_modules/(?!variables/.*)"
+    ],
     "testPathIgnorePatterns": [
       "dist"
-    ],
-    "moduleNameMapper": {
-      "@ideallabs/timelock_wasm_wrapper": "<rootDir>/src/test/__mocks__/timelock-wasm-wrapper.ts"
-    }
+    ]
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",

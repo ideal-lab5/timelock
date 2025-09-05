@@ -24,12 +24,15 @@ import init, {
   decrypt,
 } from '@ideallabs/timelock_wasm_wrapper'
 import { IdentityBuilder } from './interfaces/IIdentityBuilder'
+import { DrandIdentityBuilder } from './interfaces/DrandIdentityBuilder'
 
 /**
  * Critical runtime errors that can be encountered in the Timelock class
  */
 export enum TimelockErrors {
-  ERR_UNEXPECTED_TYPE = "The wasm returned something that could not be converted to a UInt8Array."
+  INVALID_SECRET_KEY_SIZE = "Ephemeral secret key must be exactly 32 bytes.",
+  INVALID_PUBLIC_KEY_SIZE = "The beacon public key must be exactly 96 bytes.",
+  INVALID_ROUND_NUMBER = "The round number must be a positive integer.",
 }
 
 /**
@@ -67,8 +70,11 @@ export class Timelock {
    * @returns A Timelock instance
    */
   public static async build() {
+    let timelock = new Timelock()
+    // initialize the wasm 
     await init()
-    return new Timelock()
+    timelock.wasmReady = true
+    return timelock
   }
 
   /**
@@ -76,7 +82,6 @@ export class Timelock {
    *
    * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
    * @param roundNumber: The round of the protocol when the message can be decrypted
-   * @param identityBuilder: An IdentityBuilder implementation
    * @param beaconPublicKeyHex: The hex-encoded public key of the randomness beacon
    * @param ephemeralSecretKeyHex: A hex-encoded ephemeral secret key passed to AES-GCM
    * @returns The timelocked ciphertext if successful, otherwise an error message.
@@ -84,20 +89,30 @@ export class Timelock {
   public async encrypt(
     encodedMessage: Uint8Array,
     roundNumber: number,
-    identityBuilder: IdentityBuilder<number>,
-    beaconPublicKeyHex: string,
-    ephemeralSecretKeyHex: string
+    ephemeralSecretKey: Uint8Array,
+    beaconPublicKey: Uint8Array,
   ): Promise<Result<Uint8Array>> {
+    // validations
+    if (ephemeralSecretKey.length !== 32) {
+      return error(TimelockErrors.INVALID_SECRET_KEY_SIZE)
+    }
+
+    if (beaconPublicKey.length !== 96) {
+      return error(TimelockErrors.INVALID_PUBLIC_KEY_SIZE)
+    }
+
+    if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
+      return error("The round number must be a positive integer.")
+    }
+
     try {
       await this.checkWasm()
-      const beaconPublicKey = u8a(beaconPublicKeyHex)
-      const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
-      const id = await identityBuilder.build(roundNumber)
+      const id = await DrandIdentityBuilder.build(roundNumber)
       const ciphertext = tle(id, encodedMessage, ephemeralSecretKey, beaconPublicKey)
-      const result = new Uint8Array(ciphertext)
-      return ok(result)
+      return ok(new Uint8Array(ciphertext))
     } catch (err) {
-      return error(err.message)
+      const message = err instanceof Error ? err.message : String(err)
+      return error(message)
     }
   }
 
@@ -105,19 +120,25 @@ export class Timelock {
    * Timelock decryption: Decrypt the ciphertext using a pulse from the beacon produced at the given block
    * 
    * @param ciphertext: Ciphertext to be decrypted
-   * @param blockNumber: Block number that has the signature for decryption
+   * @param secretKey: The secret key for decryption (BLS sig output from a beacon)
    * @returns: The decrypted message if successful, otherwise an error message.
    */
   public async decrypt(
     ciphertext: Uint8Array,
-    signatureHex: string
+    secretKey: Uint8Array
   ): Promise<Result<Uint8Array>> {
+
+    if (secretKey.length !== 32) {
+      return error(TimelockErrors.INVALID_SECRET_KEY_SIZE)
+    }
+
     try {
       await this.checkWasm()
-      const signature = u8a(signatureHex)
-      return ok(new Uint8Array(tld(ciphertext, signature)))
+      const result = tld(ciphertext, secretKey)
+      return ok(new Uint8Array(result))
     } catch (err) {
-      return error(err.message)
+      const message = err instanceof Error ? err.message : String(err)
+      return error(message)
     }
   }
 
@@ -128,16 +149,22 @@ export class Timelock {
    * @param ephemeralSecretKey: An ephemeral secret key (32-bytes)
    * @returns The plaintext
    */
-  public async forceDecrypt(
+  public async earlyDecrypt(
     ciphertext: Uint8Array,
-    ephemeralSecretKeyHex: string
+    ephemeralSecretKey: Uint8Array
   ): Promise<Result<Uint8Array>> {
+
+    if (ephemeralSecretKey.length !== 32) {
+      return error(TimelockErrors.INVALID_SECRET_KEY_SIZE)
+    }
+
     try {
       await this.checkWasm()
-      const ephemeralSecretKey = u8a(ephemeralSecretKeyHex)
-      return ok(new Uint8Array(decrypt(ciphertext, ephemeralSecretKey)))
+      const res = decrypt(ciphertext, ephemeralSecretKey)
+      return ok(new Uint8Array(res))
     } catch (err) {
-      return error(err.message)
+      const message = err instanceof Error ? err.message : String(err)
+      return error(message)
     }
   }
 
@@ -151,27 +178,9 @@ export class Timelock {
         await init()
         this.wasmReady = true
       } catch (err) {
-        throw new Error("Failed to initialize WASM " + err.message)
+        const message = err instanceof Error ? err.message : String(err)
+        throw new Error("Failed to initialize WASM " + message)
       }
     }
   }
-}
-
-/**
- * Converts the hex-encoded string to a Uint8Array
- * @param hex A hex-encoded string
- * @returns A Uint8Array
- */
-export function u8a(hexString: string): Uint8Array {
-  const length = hexString.length;
-  if (length % 2 !== 0) {
-    throw new Error("Invalid hex string: Length must be even.");
-  }
-
-  const bytes = new Uint8Array(length / 2);
-  for (let i = 0; i < length; i += 2) {
-    bytes[i / 2] = (parseInt(hexString[i], 16) << 4) | parseInt(hexString[i + 1], 16);
-  }
-
-  return bytes;
 }
