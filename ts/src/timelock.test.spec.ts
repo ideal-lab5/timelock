@@ -156,7 +156,7 @@ describe('Timelock Encryption', () => {
   test('it should decrypt data using tld', async () => {
     const instance = await Timelock.build()
     const ciphertext = new Uint8Array([10, 11, 12])
-    let signature = new Uint8Array(32)
+    let signature = new Uint8Array(48)
     signature.fill(1)
 
     const expectedResult = new Uint8Array(2);
@@ -173,7 +173,7 @@ describe('Timelock Encryption', () => {
 
     const result = await timelock.decrypt(
       new Uint8Array(32),
-      new Uint8Array(32),
+      new Uint8Array(48),
     )
 
     expect(result).toBeInstanceOf(Error)
@@ -191,10 +191,10 @@ describe('Timelock Encryption', () => {
 
     // too small
     let result = await instance.decrypt(ciphertext, smallSignature)
-    expect(result).toStrictEqual(new Error(TimelockErrors.INVALID_SECRET_KEY_SIZE));
+    expect(result).toStrictEqual(new Error(TimelockErrors.INVALID_SIGNATURE_SIZE));
     // too large
     result = await instance.decrypt(ciphertext, largeSignature)
-    expect(result).toStrictEqual(new Error(TimelockErrors.INVALID_SECRET_KEY_SIZE));
+    expect(result).toStrictEqual(new Error(TimelockErrors.INVALID_SIGNATURE_SIZE));
   })
 
 

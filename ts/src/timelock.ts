@@ -26,11 +26,19 @@ import init, {
 import { IdentityBuilder } from './interfaces/IIdentityBuilder'
 import { DrandIdentityBuilder } from './interfaces/DrandIdentityBuilder'
 
+// the size (in bytes) of a public key
+const PUBLIC_KEY_SIZE = 96
+// the size (in bytes) of a secret key
+const SECRET_KEY_SIZE = 32
+// the size (in bytes) of a signature
+const SIGNATURE_SIZE = 48
+
 /**
  * Critical runtime errors that can be encountered in the Timelock class
  */
 export enum TimelockErrors {
   INVALID_SECRET_KEY_SIZE = "Ephemeral secret key must be exactly 32 bytes.",
+  INVALID_SIGNATURE_SIZE = "Signatures must be exactly 48 bytes.",
   INVALID_PUBLIC_KEY_SIZE = "The beacon public key must be exactly 96 bytes.",
   INVALID_ROUND_NUMBER = "The round number must be a positive integer.",
 }
@@ -93,16 +101,16 @@ export class Timelock {
     beaconPublicKey: Uint8Array,
   ): Promise<Result<Uint8Array>> {
     // validations
-    if (ephemeralSecretKey.length !== 32) {
+    if (ephemeralSecretKey.length !== SECRET_KEY_SIZE) {
       return error(TimelockErrors.INVALID_SECRET_KEY_SIZE)
     }
 
-    if (beaconPublicKey.length !== 96) {
+    if (beaconPublicKey.length !== PUBLIC_KEY_SIZE) {
       return error(TimelockErrors.INVALID_PUBLIC_KEY_SIZE)
     }
 
     if (!Number.isInteger(roundNumber) || roundNumber <= 0) {
-      return error("The round number must be a positive integer.")
+      return error(TimelockErrors.INVALID_ROUND_NUMBER)
     }
 
     try {
@@ -125,16 +133,16 @@ export class Timelock {
    */
   public async decrypt(
     ciphertext: Uint8Array,
-    secretKey: Uint8Array
+    signature: Uint8Array
   ): Promise<Result<Uint8Array>> {
 
-    if (secretKey.length !== 32) {
-      return error(TimelockErrors.INVALID_SECRET_KEY_SIZE)
+    if (signature.length !== SIGNATURE_SIZE) {
+      return error(TimelockErrors.INVALID_SIGNATURE_SIZE)
     }
 
     try {
       await this.checkWasm()
-      const result = tld(ciphertext, secretKey)
+      const result = tld(ciphertext, signature)
       return ok(new Uint8Array(result))
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
