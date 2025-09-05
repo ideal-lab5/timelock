@@ -42,17 +42,11 @@ function App() {
     const hash = 'SHA-256'
     const length = 32
     const esk = await hkdf.compute(seed, hash, length, '')
-    // const key = Array.from(esk.key)
-    //   .map((byte) => byte.toString(16).padStart(2, '0'))
-    //   .join('')
     // the message to encrypt for the future
     const message = 'Hello, Timelock!'
     const encodedMessage = new TextEncoder().encode(message)
-    // A randomness beacon public key (ex: IDN public key)
-    // We first get it as hex and then convert to a Uint8Array
+    // A randomness beacon public key (ex: Drand public key)
     const pubkey = fromHexString('83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a')
-    // '83cf0f2896adee7eb8b5f01fcad3912212c437e0073e911fb90022d3e760183c8c4b450b6a0a6c3ac6a5776a2d1064510d1fec758c921cc22b0e17e63aaf4bcb5ed66304de9cf809bd274ca73bab4af5a6e9c76a4bc09e76eae8991ef5ece45a'
-
     // A future round number of the randomness beacon
     const roundNumber = 1000
     // 2. Encrypt the message

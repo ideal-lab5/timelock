@@ -90,8 +90,8 @@ export class Timelock {
    *
    * @param encodedMessage: The message to encrypt, encoded as a Uint8Array
    * @param roundNumber: The round of the protocol when the message can be decrypted
-   * @param beaconPublicKeyHex: The hex-encoded public key of the randomness beacon
-   * @param ephemeralSecretKeyHex: A hex-encoded ephemeral secret key passed to AES-GCM
+   * @param beaconPublicKey: The public key of the randomness beacon
+   * @param ephemeralSecretKey: An ephemeral secret key, passed to AES-GCM
    * @returns The timelocked ciphertext if successful, otherwise an error message.
    */
   public async encrypt(
